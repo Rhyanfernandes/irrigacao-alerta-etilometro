@@ -63,8 +63,8 @@ export function Sidebar({ currentPath }: SidebarProps) {
       collapsible="icon"
     >
       <SidebarHeader className="flex items-center gap-2 py-4">
-        <Droplets className="h-6 w-6 text-irrigation-600" />
-        <span className="font-bold text-lg">IrrigaSeg</span>
+        <Droplets className="h-6 w-6 text-green-600" />
+        <span className="font-bold text-lg">Irricom</span>
         <SidebarTrigger className="ml-auto" />
       </SidebarHeader>
       <SidebarContent>
