@@ -21,14 +21,19 @@ interface TestDetailsProps {
 export function TestDetails({ test, open, setOpen }: TestDetailsProps) {
   if (!test) return null;
 
-  // Calculate percentage based on test result
+  // Get alcohol level from test or use a default
   const getTestPercentage = () => {
-    if (test.result === "positive") {
-      // Random value between 0.05 and 0.4 for positive tests (representing mg/L)
-      return (Math.random() * 0.35 + 0.05).toFixed(2);
+    if (test.alcoholLevel !== undefined) {
+      return test.alcoholLevel.toFixed(2);
     } else {
-      // Random value between 0 and 0.03 for negative tests (representing mg/L)
-      return (Math.random() * 0.03).toFixed(2);
+      // Default values if alcoholLevel is not specified
+      if (test.result === "positive") {
+        // Random value between 0.05 and 0.4 for positive tests (representing mg/L)
+        return (Math.random() * 0.35 + 0.05).toFixed(2);
+      } else {
+        // Random value between 0 and 0.03 for negative tests (representing mg/L)
+        return (Math.random() * 0.03).toFixed(2);
+      }
     }
   };
 
@@ -57,10 +62,10 @@ export function TestDetails({ test, open, setOpen }: TestDetailsProps) {
               </div>
               
               <Badge
-                variant={test.result === "negative" ? "destructive" : "default"}
-                className={`px-3 py-1 text-sm ${test.result === "negative" ? "bg-red-500" : "bg-green-500"}`}
+                variant={test.result === "positive" ? "destructive" : "default"}
+                className={`px-3 py-1 text-sm ${test.result === "positive" ? "bg-red-500" : "bg-green-500"}`}
               >
-                {test.result === "negative" ? "Negativo" : "Positivo"}
+                {test.result === "positive" ? "Positivo" : "Negativo"}
               </Badge>
             </div>
             

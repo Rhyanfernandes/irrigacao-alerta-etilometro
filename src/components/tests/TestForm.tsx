@@ -49,6 +49,7 @@ export function TestForm({
       time: format(new Date(), "HH:mm"),
       result: "negative",
       notes: "",
+      alcoholLevel: 0.00
     }
   );
 
@@ -72,6 +73,15 @@ export function TestForm({
         employeeId: value,
         employeeName: employee?.name
       }));
+    } else if (field === "alcoholLevel") {
+      // Parse alcoholLevel as a float and limit to 2 decimal places
+      const numValue = parseFloat(value);
+      if (!isNaN(numValue)) {
+        setFormData(prev => ({
+          ...prev,
+          [field]: parseFloat(numValue.toFixed(2)),
+        }));
+      }
     } else {
       setFormData(prev => ({
         ...prev,
@@ -95,6 +105,12 @@ export function TestForm({
       return;
     }
 
+    // Set a default alcoholLevel if one isn't provided
+    let alcoholLevel = formData.alcoholLevel;
+    if (alcoholLevel === undefined || alcoholLevel === null) {
+      alcoholLevel = formData.result === "positive" ? 0.05 : 0.00;
+    }
+
     const newTest: TestResult = {
       id: test?.id || crypto.randomUUID(),
       employeeId: formData.employeeId,
@@ -103,6 +119,7 @@ export function TestForm({
       time: formData.time || format(new Date(), "HH:mm"),
       result: formData.result as "positive" | "negative",
       notes: formData.notes,
+      alcoholLevel,
       createdAt: test?.createdAt || new Date(),
       updatedAt: new Date(),
     };
@@ -187,6 +204,23 @@ export function TestForm({
                   <Label htmlFor="positive" className="cursor-pointer">Positivo</Label>
                 </div>
               </RadioGroup>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="alcoholLevel">Nível de Álcool (mg/L) *</Label>
+              <Input
+                id="alcoholLevel"
+                type="number"
+                min="0"
+                max="2"
+                step="0.01"
+                placeholder="0.00"
+                value={formData.alcoholLevel || 0}
+                onChange={(e) => handleChange("alcoholLevel", e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Limite legal: 0.04 mg/L
+              </p>
             </div>
 
             <div className="space-y-2">

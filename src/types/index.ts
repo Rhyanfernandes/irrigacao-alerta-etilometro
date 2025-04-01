@@ -16,6 +16,7 @@ export interface TestResult {
   time: string;
   result: "positive" | "negative";
   notes?: string;
+  alcoholLevel?: number; // New field for blood alcohol level
   createdAt: Date;
   updatedAt: Date;
 }

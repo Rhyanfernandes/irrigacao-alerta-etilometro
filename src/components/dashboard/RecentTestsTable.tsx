@@ -44,10 +44,10 @@ export function RecentTestsTable({ tests }: RecentTestsTableProps) {
                 <TableCell>{test.employeeName}</TableCell>
                 <TableCell>
                   <Badge
-                    variant={test.result === "negative" ? "destructive" : "default"}
-                    className={test.result === "negative" ? "bg-red-500" : "bg-green-500"}
+                    variant={test.result === "positive" ? "destructive" : "default"}
+                    className={test.result === "positive" ? "bg-red-500" : "bg-green-500"}
                   >
-                    {test.result === "negative" ? "Negativo" : "Positivo"}
+                    {test.result === "positive" ? "Positivo" : "Negativo"}
                   </Badge>
                 </TableCell>
               </TableRow>
