@@ -60,7 +60,6 @@ export function Sidebar({ currentPath }: SidebarProps) {
 
   return (
     <SidebarComponent
-      defaultCollapsed={false}
       collapsible="icon"
     >
       <SidebarHeader className="flex items-center gap-2 py-4">
