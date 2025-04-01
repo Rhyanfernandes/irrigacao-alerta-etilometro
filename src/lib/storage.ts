@@ -3,9 +3,15 @@ import { Employee, TestResult, DrawResult } from "@/types";
 
 // Keys for localStorage
 const STORAGE_KEYS = {
-  EMPLOYEES: "irrigaseg_employees",
-  TESTS: "irrigaseg_tests",
-  DRAWS: "irrigaseg_draws",
+  EMPLOYEES: "irricom_employees",
+  TESTS: "irricom_tests",
+  DRAWS: "irricom_draws",
+  APP_SETTINGS: "irricom_settings",
+};
+
+// Helper to trigger storage event for real-time updates
+const triggerStorageEvent = (key: string) => {
+  window.dispatchEvent(new Event('storage'));
 };
 
 // Employee functions
@@ -28,6 +34,7 @@ export const getEmployees = (): Employee[] => {
 
 export const saveEmployees = (employees: Employee[]): void => {
   localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify(employees));
+  triggerStorageEvent(STORAGE_KEYS.EMPLOYEES);
 };
 
 export const saveEmployee = (employee: Employee): void => {
@@ -71,6 +78,7 @@ export const getTests = (): TestResult[] => {
 
 export const saveTests = (tests: TestResult[]): void => {
   localStorage.setItem(STORAGE_KEYS.TESTS, JSON.stringify(tests));
+  triggerStorageEvent(STORAGE_KEYS.TESTS);
 };
 
 export const saveTest = (test: TestResult): void => {
@@ -113,6 +121,7 @@ export const getDraws = (): DrawResult[] => {
 
 export const saveDraws = (draws: DrawResult[]): void => {
   localStorage.setItem(STORAGE_KEYS.DRAWS, JSON.stringify(draws));
+  triggerStorageEvent(STORAGE_KEYS.DRAWS);
 };
 
 export const saveDraw = (draw: DrawResult): void => {
@@ -132,6 +141,36 @@ export const deleteDraw = (id: string): void => {
   const draws = getDraws();
   const filtered = draws.filter(draw => draw.id !== id);
   saveDraws(filtered);
+};
+
+// App settings
+export interface AppSettings {
+  theme?: 'light' | 'dark';
+  lastLogin?: Date;
+  userPreferences?: {
+    defaultDrawCount: number;
+  };
+}
+
+export const getAppSettings = (): AppSettings => {
+  const stored = localStorage.getItem(STORAGE_KEYS.APP_SETTINGS);
+  if (!stored) return { userPreferences: { defaultDrawCount: 3 } };
+  
+  try {
+    const parsed = JSON.parse(stored);
+    return {
+      ...parsed,
+      lastLogin: parsed.lastLogin ? new Date(parsed.lastLogin) : undefined,
+    };
+  } catch (error) {
+    console.error("Error parsing app settings from localStorage:", error);
+    return { userPreferences: { defaultDrawCount: 3 } };
+  }
+};
+
+export const saveAppSettings = (settings: AppSettings): void => {
+  localStorage.setItem(STORAGE_KEYS.APP_SETTINGS, JSON.stringify(settings));
+  triggerStorageEvent(STORAGE_KEYS.APP_SETTINGS);
 };
 
 // Data export

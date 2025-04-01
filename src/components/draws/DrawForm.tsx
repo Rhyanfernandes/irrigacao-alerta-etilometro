@@ -13,7 +13,7 @@ import {
   DialogTitle 
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Check, Shuffle, X } from "lucide-react";
+import { Check, Shuffle, X, User, Building, Briefcase } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
@@ -29,6 +29,7 @@ export function DrawForm({ open, setOpen, employees, onSave }: DrawFormProps) {
   const [count, setCount] = useState(3);
   const [selectedEmployees, setSelectedEmployees] = useState<Employee[]>([]);
   const [hasDrawn, setHasDrawn] = useState(false);
+  const [isDrawing, setIsDrawing] = useState(false);
 
   const activeEmployees = employees.filter(e => e.active);
 
@@ -38,6 +39,7 @@ export function DrawForm({ open, setOpen, employees, onSave }: DrawFormProps) {
       setCount(3);
       setSelectedEmployees([]);
       setHasDrawn(false);
+      setIsDrawing(false);
     }
   }, [open]);
 
@@ -47,13 +49,33 @@ export function DrawForm({ open, setOpen, employees, onSave }: DrawFormProps) {
       return;
     }
 
-    // Shuffle the array of employees and pick the first 'count' elements
-    const shuffled = [...activeEmployees].sort(() => 0.5 - Math.random());
-    const selected = shuffled.slice(0, count);
+    setIsDrawing(true);
+    setSelectedEmployees([]);
+    setHasDrawn(false);
     
-    setSelectedEmployees(selected);
-    setHasDrawn(true);
-    toast.success(`${count} colaboradores sorteados com sucesso!`);
+    // Simulating a more dynamic draw with animation
+    let currentIndex = 0;
+    const interval = setInterval(() => {
+      // Shuffle the array of employees each time for visual effect
+      const shuffled = [...activeEmployees].sort(() => 0.5 - Math.random());
+      const temporarySelection = shuffled.slice(0, count);
+      setSelectedEmployees(temporarySelection);
+      
+      currentIndex++;
+      if (currentIndex >= 8) { // Do 8 iterations for animation
+        clearInterval(interval);
+        
+        // Final selection
+        const finalShuffled = [...activeEmployees].sort(() => 0.5 - Math.random());
+        const selected = finalShuffled.slice(0, count);
+        setSelectedEmployees(selected);
+        setHasDrawn(true);
+        setIsDrawing(false);
+        toast.success(`${count} colaboradores sorteados com sucesso!`, {
+          icon: <Shuffle className="h-4 w-4 text-white" />
+        });
+      }
+    }, 200);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -74,14 +96,16 @@ export function DrawForm({ open, setOpen, employees, onSave }: DrawFormProps) {
 
     onSave(drawResult);
     setOpen(false);
-    toast.success("Sorteio registrado com sucesso");
+    toast.success("Sorteio irricom registrado com sucesso", {
+      icon: <Check className="h-4 w-4 text-white" />
+    });
   };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] border-green-200">
         <DialogHeader>
-          <DialogTitle>Novo Sorteio de Colaboradores</DialogTitle>
+          <DialogTitle className="text-green-800">Novo Sorteio de Colaboradores - irricom</DialogTitle>
           <DialogDescription>
             Realize um sorteio aleatório de colaboradores para testes de etilômetro.
           </DialogDescription>
@@ -90,17 +114,18 @@ export function DrawForm({ open, setOpen, employees, onSave }: DrawFormProps) {
           <div className="space-y-4 py-2 pb-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="date">Data</Label>
+                <Label htmlFor="date" className="text-green-700">Data</Label>
                 <Input
                   id="date"
                   type="date"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
+                  className="border-green-200 focus-visible:ring-green-500"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="count">Número de colaboradores</Label>
+                <Label htmlFor="count" className="text-green-700">Número de colaboradores</Label>
                 <Input
                   id="count"
                   type="number"
@@ -108,6 +133,7 @@ export function DrawForm({ open, setOpen, employees, onSave }: DrawFormProps) {
                   max={activeEmployees.length}
                   value={count}
                   onChange={(e) => setCount(parseInt(e.target.value))}
+                  className="border-green-200 focus-visible:ring-green-500"
                 />
               </div>
             </div>
@@ -116,30 +142,37 @@ export function DrawForm({ open, setOpen, employees, onSave }: DrawFormProps) {
               <Button 
                 type="button" 
                 onClick={performDraw}
-                className="w-full"
-                variant="secondary"
+                className="w-full bg-green-600 hover:bg-green-700 text-white"
+                disabled={isDrawing}
               >
-                <Shuffle className="mr-2 h-4 w-4" />
-                Realizar Sorteio
+                <Shuffle className={`mr-2 h-4 w-4 ${isDrawing ? 'animate-spin' : ''}`} />
+                {isDrawing ? 'Sorteando...' : 'Realizar Sorteio'}
               </Button>
             </div>
 
-            {hasDrawn && selectedEmployees.length > 0 && (
+            {(hasDrawn || isDrawing) && selectedEmployees.length > 0 && (
               <div className="pt-2">
-                <Label>Colaboradores Sorteados</Label>
-                <div className="rounded-md border p-3 mt-1.5 space-y-2">
+                <Label className="text-green-700">Colaboradores Sorteados</Label>
+                <div className="rounded-md border border-green-200 p-3 mt-1.5 space-y-2 bg-green-50">
                   {selectedEmployees.map((employee) => (
                     <div 
                       key={employee.id} 
-                      className="flex items-center justify-between py-1"
+                      className={`flex items-center justify-between py-1 px-3 rounded-md ${isDrawing ? 'bg-white animate-pulse' : 'bg-white'}`}
                     >
-                      <div>
-                        <p className="font-medium">{employee.name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {employee.department}
-                        </p>
+                      <div className="flex items-center">
+                        <User className="h-4 w-4 mr-2 text-green-600" />
+                        <div>
+                          <p className="font-medium text-green-800">{employee.name}</p>
+                          <div className="flex items-center text-sm text-green-600">
+                            <Building className="h-3 w-3 mr-1" />
+                            {employee.department}
+                          </div>
+                        </div>
                       </div>
-                      <Badge variant="outline">{employee.position}</Badge>
+                      <Badge variant="outline" className="border-green-200 text-green-700 flex items-center">
+                        <Briefcase className="h-3 w-3 mr-1" />
+                        {employee.position}
+                      </Badge>
                     </div>
                   ))}
                 </div>
@@ -151,6 +184,7 @@ export function DrawForm({ open, setOpen, employees, onSave }: DrawFormProps) {
               type="button"
               variant="outline"
               onClick={() => setOpen(false)}
+              className="border-green-200 text-green-700 hover:bg-green-50"
             >
               <X className="mr-2 h-4 w-4" />
               Cancelar
@@ -158,6 +192,7 @@ export function DrawForm({ open, setOpen, employees, onSave }: DrawFormProps) {
             <Button 
               type="submit"
               disabled={!hasDrawn}
+              className="bg-green-600 hover:bg-green-700 text-white"
             >
               <Check className="mr-2 h-4 w-4" />
               Salvar Sorteio
