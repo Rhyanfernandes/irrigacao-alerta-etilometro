@@ -48,14 +48,14 @@ interface EmployeeTableProps {
 
 export function EmployeeTable({ employees, onEdit, onDelete }: EmployeeTableProps) {
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterDepartment, setFilterDepartment] = useState("");
+  const [filterDepartment, setFilterDepartment] = useState("all");
   const [deleteId, setDeleteId] = useState<string | null>(null);
   
   const departments = [...new Set(employees.map(emp => emp.department))];
   
   const filteredEmployees = employees.filter(employee => {
     const matchesSearch = employee.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesDepartment = !filterDepartment || employee.department === filterDepartment;
+    const matchesDepartment = filterDepartment === "all" || employee.department === filterDepartment;
     return matchesSearch && matchesDepartment;
   });
 
@@ -84,7 +84,7 @@ export function EmployeeTable({ employees, onEdit, onDelete }: EmployeeTableProp
             <SelectValue placeholder="Todos os departamentos" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todos os departamentos</SelectItem>
+            <SelectItem value="all">Todos os departamentos</SelectItem>
             {departments.map(dept => (
               <SelectItem key={dept} value={dept}>{dept}</SelectItem>
             ))}
