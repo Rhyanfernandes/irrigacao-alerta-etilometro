@@ -61,7 +61,7 @@ export function Sidebar({ currentPath }: SidebarProps) {
   return (
     <SidebarComponent
       defaultCollapsed={false}
-      collapsible={true}
+      collapsible="icon"
     >
       <SidebarHeader className="flex items-center gap-2 py-4">
         <Droplets className="h-6 w-6 text-irrigation-600" />
@@ -74,8 +74,8 @@ export function Sidebar({ currentPath }: SidebarProps) {
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => (
-                <SidebarMenuItem key={item.title} active={currentPath === item.url}>
-                  <SidebarMenuButton asChild>
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild isActive={currentPath === item.url}>
                     <Link to={item.url} className="flex items-center gap-3">
                       <item.icon className="h-5 w-5" />
                       <span>{item.title}</span>
