@@ -76,7 +76,7 @@ export default function Tests() {
   return (
     <>
       <PageHeader 
-        title="Testes de Etilômetro" 
+        title="Testes de Etilômetro - irricom" 
         description="Gerencie os resultados dos testes" 
         action={{
           label: "Novo Teste",

@@ -84,8 +84,8 @@ export default function Reports() {
   const negativeTestsCount = filteredTests.filter(test => test.result === "negative").length;
 
   const resultChartData = [
-    { name: "Negativos", value: negativeTestsCount, color: "#10b981" },
-    { name: "Positivos", value: positiveTestsCount, color: "#ef4444" },
+    { name: "Negativos", value: negativeTestsCount, color: "#ef4444" },
+    { name: "Positivos", value: positiveTestsCount, color: "#10b981" },
   ];
 
   // Prepare data for monthly bar chart
@@ -128,7 +128,7 @@ export default function Reports() {
   return (
     <>
       <PageHeader 
-        title="Relatórios" 
+        title="Relatórios - irricom" 
         description="Visualize e exporte relatórios dos testes" 
       />
 
@@ -174,7 +174,7 @@ export default function Reports() {
             <CardTitle className="text-sm font-medium">Positivos</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{positiveTestsCount}</div>
+            <div className="text-2xl font-bold text-green-600">{positiveTestsCount}</div>
             {filteredTests.length > 0 && (
               <p className="text-xs text-muted-foreground">
                 {((positiveTestsCount / filteredTests.length) * 100).toFixed(1)}% do total
@@ -187,7 +187,7 @@ export default function Reports() {
             <CardTitle className="text-sm font-medium">Negativos</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{negativeTestsCount}</div>
+            <div className="text-2xl font-bold text-red-600">{negativeTestsCount}</div>
             {filteredTests.length > 0 && (
               <p className="text-xs text-muted-foreground">
                 {((negativeTestsCount / filteredTests.length) * 100).toFixed(1)}% do total
@@ -209,8 +209,8 @@ export default function Reports() {
           data={monthlyData}
           xKey="month"
           bars={[
-            { key: "negative", name: "Negativos", color: "#10b981" },
-            { key: "positive", name: "Positivos", color: "#ef4444" },
+            { key: "negative", name: "Negativos", color: "#ef4444" },
+            { key: "positive", name: "Positivos", color: "#10b981" },
           ]}
         />
       </div>

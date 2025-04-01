@@ -101,7 +101,8 @@ export function TestTable({ tests, onEdit, onDelete, onViewDetails }: TestTableP
                   <TableCell>{test.employeeName}</TableCell>
                   <TableCell>
                     <Badge
-                      variant={test.result === "negative" ? "outline" : "destructive"}
+                      variant={test.result === "negative" ? "destructive" : "default"}
+                      className={test.result === "negative" ? "bg-red-500" : "bg-green-500"}
                     >
                       {test.result === "negative" ? "Negativo" : "Positivo"}
                     </Badge>
