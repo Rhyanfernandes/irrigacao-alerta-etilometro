@@ -55,7 +55,7 @@ export function DrawTable({ draws, onDelete, onCreateTests, loading = false }: D
   const [detailsOpen, setDetailsOpen] = useState(false);
   
   const filteredDraws = draws.filter(draw => 
-    draw.employeeNames.some(name => 
+    draw.employeeNames && draw.employeeNames.some(name => 
       name.toLowerCase().includes(searchTerm.toLowerCase())
     )
   );

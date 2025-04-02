@@ -48,7 +48,7 @@ export default function Dashboard() {
   }, [tests]);
 
   // Calculate statistics
-  const activeEmployees = employees.filter(e => e.active).length;
+  const activeEmployees = employees.filter(e => e.status === "active").length;
   const totalTests = tests.length;
   const positiveTests = tests.filter(t => t.result === "positive").length;
   const negativeTests = tests.filter(t => t.result === "negative").length;

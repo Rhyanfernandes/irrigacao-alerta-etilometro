@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { TestResult, Employee } from "@/types";
 import { Button } from "@/components/ui/button";
@@ -53,7 +52,6 @@ export function TestForm({
     }
   );
 
-  // Set selected employee when the component opens
   useEffect(() => {
     if (selectedEmployeeId && !test) {
       const employee = employees.find(e => e.id === selectedEmployeeId);
@@ -74,7 +72,6 @@ export function TestForm({
         employeeName: employee?.name
       }));
     } else if (field === "alcoholLevel") {
-      // Parse alcoholLevel as a float and limit to 2 decimal places
       const numValue = parseFloat(value);
       if (!isNaN(numValue)) {
         setFormData(prev => ({
@@ -105,7 +102,6 @@ export function TestForm({
       return;
     }
 
-    // Set a default alcoholLevel if one isn't provided
     let alcoholLevel = formData.alcoholLevel;
     if (alcoholLevel === undefined || alcoholLevel === null) {
       alcoholLevel = formData.result === "positive" ? 0.05 : 0.00;

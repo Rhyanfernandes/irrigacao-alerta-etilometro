@@ -133,8 +133,8 @@ export function EmployeeTable({ employees, onEdit, onDelete }: EmployeeTableProp
                   <TableCell>{employee.department}</TableCell>
                   <TableCell>{employee.position}</TableCell>
                   <TableCell>
-                    <Badge variant={employee.active ? "outline" : "secondary"}>
-                      {employee.active ? "Ativo" : "Inativo"}
+                    <Badge variant={employee.status === "active" ? "outline" : "secondary"}>
+                      {employee.status === "active" ? "Ativo" : "Inativo"}
                     </Badge>
                   </TableCell>
                   <TableCell>

@@ -55,7 +55,7 @@ export default function Draws() {
 
   const handleCreateTests = (draw: DrawResult) => {
     // Redirect to testing page for the first employee in the draw
-    if (draw.employeeIds.length > 0) {
+    if (draw.employeeIds && draw.employeeIds.length > 0) {
       navigate("/tests", { state: { employeeId: draw.employeeIds[0] } });
     } else {
       toast.error("Nenhum colaborador encontrado no sorteio");

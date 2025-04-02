@@ -35,7 +35,7 @@ export function EmployeeForm({ open, setOpen, employee, onSave }: EmployeeFormPr
       name: "",
       department: "",
       position: "",
-      active: true,
+      status: "active",
     }
   );
 
@@ -59,7 +59,9 @@ export function EmployeeForm({ open, setOpen, employee, onSave }: EmployeeFormPr
       name: formData.name || "",
       department: formData.department || "",
       position: formData.position || "",
-      active: formData.active ?? true,
+      registerNumber: formData.registerNumber || "",
+      status: formData.status || "active",
+      active: formData.status === "active",
       createdAt: employee?.createdAt || new Date(),
     };
 
@@ -116,9 +118,9 @@ export function EmployeeForm({ open, setOpen, employee, onSave }: EmployeeFormPr
             <div className="space-y-2">
               <Label htmlFor="status">Status</Label>
               <Select
-                value={formData.active ? "active" : "inactive"}
+                value={formData.status || "active"}
                 onValueChange={(value) => 
-                  handleChange("active", value === "active")
+                  handleChange("status", value)
                 }
               >
                 <SelectTrigger id="status">

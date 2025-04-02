@@ -89,6 +89,7 @@ export function DrawForm({ open, setOpen, employees, onSave }: DrawFormProps) {
     const drawResult: DrawResult = {
       id: crypto.randomUUID(),
       date: new Date(date),
+      employees: selectedEmployees,
       employeeIds: selectedEmployees.map(e => e.id),
       employeeNames: selectedEmployees.map(e => e.name),
       createdAt: new Date(),
