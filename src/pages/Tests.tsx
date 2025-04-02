@@ -7,19 +7,24 @@ import { TestForm } from "@/components/tests/TestForm";
 import { TestDetails } from "@/components/tests/TestDetails";
 import { getEmployees, getTests, saveTest, deleteTest } from "@/lib/storage";
 import { toast } from "sonner";
-import { ClipboardPlus } from "lucide-react";
-import { useLocation } from "react-router-dom";
+import { ClipboardPlus, ArrowLeft } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 export default function Tests() {
   const [tests, setTests] = useState<TestResult[]>([]);
+  const [filteredTests, setFilteredTests] = useState<TestResult[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [formOpen, setFormOpen] = useState(false);
   const [editingTest, setEditingTest] = useState<TestResult | undefined>(undefined);
   const [selectedTest, setSelectedTest] = useState<TestResult | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | undefined>(undefined);
+  const [employeeFilter, setEmployeeFilter] = useState<string | undefined>(undefined);
+  const [employeeName, setEmployeeName] = useState<string | undefined>(undefined);
   
   const location = useLocation();
+  const navigate = useNavigate();
   
   useEffect(() => {
     loadData();
@@ -34,11 +39,26 @@ export default function Tests() {
   
   useEffect(() => {
     // Check if we have an employee ID in the location state (from Draw page)
-    if (location.state && location.state.employeeId) {
-      setSelectedEmployeeId(location.state.employeeId);
-      setFormOpen(true);
+    if (location.state) {
+      if (location.state.employeeId) {
+        setSelectedEmployeeId(location.state.employeeId);
+        setFormOpen(true);
+      } else if (location.state.employeeFilter) {
+        // Filter tests for a specific employee
+        setEmployeeFilter(location.state.employeeFilter);
+        setEmployeeName(location.state.employeeName);
+      }
     }
   }, [location.state]);
+
+  useEffect(() => {
+    // Filter tests by employee if needed
+    if (employeeFilter) {
+      setFilteredTests(tests.filter(test => test.employeeId === employeeFilter));
+    } else {
+      setFilteredTests(tests);
+    }
+  }, [tests, employeeFilter]);
 
   const loadData = () => {
     setTests(getTests());
@@ -73,11 +93,17 @@ export default function Tests() {
     toast.success("Teste excluído com sucesso");
   };
 
+  const clearEmployeeFilter = () => {
+    setEmployeeFilter(undefined);
+    setEmployeeName(undefined);
+    navigate('/tests', { replace: true });
+  };
+
   return (
     <>
       <PageHeader 
-        title="Testes de Etilômetro - irricom" 
-        description="Gerencie os resultados dos testes" 
+        title={employeeFilter ? `Testes de ${employeeName}` : "Testes de Etilômetro - irricom"} 
+        description={employeeFilter ? "Gerenciando testes para este colaborador" : "Gerencie os resultados dos testes"} 
         action={{
           label: "Novo Teste",
           onClick: handleAddClick,
@@ -85,8 +111,21 @@ export default function Tests() {
         }}
       />
 
+      {employeeFilter && (
+        <div className="mb-4">
+          <Button 
+            variant="outline" 
+            onClick={clearEmployeeFilter}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Voltar para todos os testes
+          </Button>
+        </div>
+      )}
+
       <TestTable 
-        tests={tests}
+        tests={filteredTests}
         onEdit={handleEdit}
         onDelete={handleDelete}
         onViewDetails={handleViewDetails}

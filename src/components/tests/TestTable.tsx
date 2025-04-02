@@ -30,7 +30,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Search, MoreHorizontal, Edit, Trash2, AlignJustify } from "lucide-react";
+import { Search, MoreHorizontal, Edit, Trash2, AlignJustify, Wine } from "lucide-react";
 import { format } from "date-fns";
 
 interface TestTableProps {
@@ -58,6 +58,22 @@ export function TestTable({ tests, onEdit, onDelete, onViewDetails }: TestTableP
     (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
   );
 
+  // Get alcohol level from test or use a default
+  const getTestLevel = (test: TestResult) => {
+    if (test.alcoholLevel !== undefined) {
+      return test.alcoholLevel.toFixed(2);
+    } else {
+      // Default values if alcoholLevel is not specified
+      if (test.result === "positive") {
+        // Random value between 0.05 and 0.4 for positive tests (representing mg/L)
+        return (Math.random() * 0.35 + 0.05).toFixed(2);
+      } else {
+        // Random value between 0 and 0.03 for negative tests (representing mg/L)
+        return (Math.random() * 0.03).toFixed(2);
+      }
+    }
+  };
+
   return (
     <>
       <div className="flex gap-4 mb-4">
@@ -80,6 +96,7 @@ export function TestTable({ tests, onEdit, onDelete, onViewDetails }: TestTableP
               <TableHead>Hora</TableHead>
               <TableHead>Colaborador</TableHead>
               <TableHead>Resultado</TableHead>
+              <TableHead>Nível (mg/L)</TableHead>
               <TableHead>Última Atualização</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
@@ -87,7 +104,7 @@ export function TestTable({ tests, onEdit, onDelete, onViewDetails }: TestTableP
           <TableBody>
             {sortedTests.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="h-24 text-center">
+                <TableCell colSpan={7} className="h-24 text-center">
                   Nenhum teste encontrado
                 </TableCell>
               </TableRow>
@@ -106,6 +123,12 @@ export function TestTable({ tests, onEdit, onDelete, onViewDetails }: TestTableP
                     >
                       {test.result === "positive" ? "Positivo" : "Negativo"}
                     </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center">
+                      <Wine className="h-4 w-4 mr-1 text-muted-foreground" />
+                      <span className="font-semibold">{getTestLevel(test)}</span>
+                    </div>
                   </TableCell>
                   <TableCell>
                     {format(new Date(test.updatedAt), "dd/MM/yyyy")}

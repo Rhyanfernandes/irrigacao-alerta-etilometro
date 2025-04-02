@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { TestResult, Employee, DrawResult } from "@/types";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -85,7 +84,7 @@ export default function Reports() {
 
   const resultChartData = [
     { name: "Negativos", value: negativeTestsCount, color: "#ef4444" },
-    { name: "Positivos", value: positiveTestsCount, color: "#10b981" },
+    { name: "Positivos", value: positiveTestsCount, color: "#3b82f6" },
   ];
 
   // Prepare data for monthly bar chart
@@ -210,7 +209,7 @@ export default function Reports() {
           xKey="month"
           bars={[
             { key: "negative", name: "Negativos", color: "#ef4444" },
-            { key: "positive", name: "Positivos", color: "#10b981" },
+            { key: "positive", name: "Positivos", color: "#3b82f6" },
           ]}
         />
       </div>

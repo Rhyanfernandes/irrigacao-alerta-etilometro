@@ -1,6 +1,6 @@
-
 import { useState } from "react";
-import { Employee } from "@/types";
+import { Employee, TestResult } from "@/types";
+import { useNavigate } from "react-router-dom";
 import { 
   Table, 
   TableBody, 
@@ -39,6 +39,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Search, MoreHorizontal, Edit, Trash2, FileText } from "lucide-react";
 import { format } from "date-fns";
+import { getTests } from "@/lib/storage";
+import { toast } from "sonner";
 
 interface EmployeeTableProps {
   employees: Employee[];
@@ -47,6 +49,7 @@ interface EmployeeTableProps {
 }
 
 export function EmployeeTable({ employees, onEdit, onDelete }: EmployeeTableProps) {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterDepartment, setFilterDepartment] = useState("all");
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -62,6 +65,18 @@ export function EmployeeTable({ employees, onEdit, onDelete }: EmployeeTableProp
   const confirmDelete = (id: string) => {
     setDeleteId(null);
     onDelete(id);
+  };
+  
+  const handleViewTests = (employeeId: string, employeeName: string) => {
+    const allTests = getTests();
+    const employeeTests = allTests.filter(test => test.employeeId === employeeId);
+    
+    if (employeeTests.length === 0) {
+      toast.info(`Não há testes registrados para ${employeeName}`);
+      return;
+    }
+    
+    navigate('/tests', { state: { employeeFilter: employeeId, employeeName: employeeName } });
   };
 
   return (
@@ -142,7 +157,7 @@ export function EmployeeTable({ employees, onEdit, onDelete }: EmployeeTableProp
                         <DropdownMenuItem onClick={() => setDeleteId(employee.id)}>
                           <Trash2 className="mr-2 h-4 w-4" /> Excluir
                         </DropdownMenuItem>
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleViewTests(employee.id, employee.name)}>
                           <FileText className="mr-2 h-4 w-4" /> Ver testes
                         </DropdownMenuItem>
                       </DropdownMenuContent>
