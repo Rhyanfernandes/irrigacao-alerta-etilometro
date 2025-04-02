@@ -11,12 +11,20 @@ import { Badge } from "@/components/ui/badge";
 import { TestResult } from "@/types";
 import { format } from "date-fns";
 import { Wine } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 interface RecentTestsTableProps {
   tests: TestResult[];
 }
 
 export function RecentTestsTable({ tests }: RecentTestsTableProps) {
+  const { user } = useAuth();
+  
+  // Filter tests based on user's role and site
+  const filteredTests = user?.role === 'master' 
+    ? tests // Master sees all tests
+    : tests.filter(test => test.siteId === user?.siteId); // Site users see only their site's tests
+
   // Get alcohol level from test or use a default
   const getTestLevel = (test: TestResult) => {
     if (test.alcoholLevel !== undefined) {
@@ -43,17 +51,18 @@ export function RecentTestsTable({ tests }: RecentTestsTableProps) {
             <TableHead>Colaborador</TableHead>
             <TableHead>Resultado</TableHead>
             <TableHead>Nível (mg/L)</TableHead>
+            {user?.role === 'master' && <TableHead>Obra</TableHead>}
           </TableRow>
         </TableHeader>
         <TableBody>
-          {tests.length === 0 ? (
+          {filteredTests.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={5} className="h-24 text-center">
+              <TableCell colSpan={user?.role === 'master' ? 6 : 5} className="h-24 text-center">
                 Nenhum teste registrado recentemente
               </TableCell>
             </TableRow>
           ) : (
-            tests.map((test) => (
+            filteredTests.map((test) => (
               <TableRow key={test.id}>
                 <TableCell>
                   {format(new Date(test.date), "dd/MM/yyyy")}
@@ -74,6 +83,11 @@ export function RecentTestsTable({ tests }: RecentTestsTableProps) {
                     <span className="font-semibold">{getTestLevel(test)}</span>
                   </div>
                 </TableCell>
+                {user?.role === 'master' && (
+                  <TableCell>
+                    <Badge variant="outline">{test.siteName || "Não especificado"}</Badge>
+                  </TableCell>
+                )}
               </TableRow>
             ))
           )}
