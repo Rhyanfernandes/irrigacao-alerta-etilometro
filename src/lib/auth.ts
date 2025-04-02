@@ -1,4 +1,3 @@
-
 import { User, LoginCredentials } from "@/types/auth";
 
 // Storage keys
@@ -15,29 +14,29 @@ const MOCK_USERS: User[] = [
   },
   {
     id: "2",
-    email: "obra1@irricom.com",
-    name: "Obra Centro",
+    email: "brumadinho@irricom.com",
+    name: "Obra Brumadinho",
     role: "site",
-    siteId: "obra1",
-    siteName: "Obra Centro",
+    siteId: "brumadinho",
+    siteName: "Brumadinho",
     createdAt: new Date(),
   },
   {
     id: "3",
-    email: "obra2@irricom.com",
-    name: "Obra Norte",
+    email: "salobo@irricom.com",
+    name: "Obra Salobo",
     role: "site",
-    siteId: "obra2",
-    siteName: "Obra Norte",
+    siteId: "salobo",
+    siteName: "Salobo",
     createdAt: new Date(),
   },
   {
     id: "4",
-    email: "obra3@irricom.com",
-    name: "Obra Sul",
+    email: "hydro@irricom.com",
+    name: "Obra Hydro",
     role: "site",
-    siteId: "obra3",
-    siteName: "Obra Sul",
+    siteId: "hydro",
+    siteName: "Hydro",
     createdAt: new Date(),
   }
 ];
@@ -45,9 +44,9 @@ const MOCK_USERS: User[] = [
 // Mock passwords (in a real app, passwords would be hashed)
 const MOCK_PASSWORDS: Record<string, string> = {
   "admin@irricom.com": "admin123",
-  "obra1@irricom.com": "obra1123",
-  "obra2@irricom.com": "obra2123",
-  "obra3@irricom.com": "obra3123",
+  "brumadinho@irricom.com": "brumadinho123",
+  "salobo@irricom.com": "salobo123",
+  "hydro@irricom.com": "hydro123",
 };
 
 export const login = async (credentials: LoginCredentials): Promise<User> => {
