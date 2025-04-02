@@ -17,7 +17,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Wine } from "lucide-react";
+import { Droplets } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const loginSchema = z.object({
   email: z.string().email("Email inválido").min(1, "Email é obrigatório"),
@@ -29,6 +30,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 const Login = () => {
   const { login, isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
+  const [error, setError] = React.useState<string | null>(null);
   
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -39,12 +41,14 @@ const Login = () => {
   });
 
   const onSubmit = async (data: LoginFormValues) => {
+    setError(null);
     try {
       await login(data as LoginCredentials);
       navigate("/");
-    } catch (error) {
-      // Error is handled in the AuthContext
-      console.error(error);
+    } catch (err) {
+      // Show error message
+      setError(err instanceof Error ? err.message : "Erro ao fazer login");
+      console.error(err);
     }
   };
 
@@ -58,7 +62,7 @@ const Login = () => {
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1 text-center">
           <div className="flex justify-center mb-6">
-            <Wine className="h-12 w-12 text-blue-500" />
+            <Droplets className="h-12 w-12 text-green-500" />
           </div>
           <CardTitle className="text-2xl font-bold">IrriCom Sistema</CardTitle>
           <CardDescription>
@@ -66,6 +70,12 @@ const Login = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {error && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
@@ -103,6 +113,16 @@ const Login = () => {
               </Button>
             </form>
           </Form>
+          
+          <div className="mt-6 text-center">
+            <div className="text-sm text-gray-500">
+              <p className="mb-1">Contas de teste disponíveis:</p>
+              <p><strong>Admin:</strong> admin@irricom.com / admin123</p>
+              <p><strong>Brumadinho:</strong> brumadinho@irricom.com / brumadinho123</p>
+              <p><strong>Salobo:</strong> salobo@irricom.com / salobo123</p>
+              <p><strong>Hydro:</strong> hydro@irricom.com / hydro123</p>
+            </div>
+          </div>
         </CardContent>
         <CardFooter className="flex flex-col">
           <p className="text-xs text-center text-gray-500 mt-4">

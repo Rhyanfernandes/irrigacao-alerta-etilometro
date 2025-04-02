@@ -21,6 +21,7 @@ export const SiteSwitcher = () => {
   }
 
   const handleSiteChange = (value: string) => {
+    console.log("Changing site to:", value);
     selectSite(value === "all" ? null : value);
   };
 

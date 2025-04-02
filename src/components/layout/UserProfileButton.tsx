@@ -11,14 +11,16 @@ import {
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { LogOut, User, Building2 } from "lucide-react";
+import { LogOut, Building2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useSite } from "@/context/SiteContext";
 import { Badge } from "@/components/ui/badge";
+import { useNavigate } from "react-router-dom";
 
 export const UserProfileButton = () => {
   const { user, logout } = useAuth();
   const { sites, selectSite, selectedSiteId, isViewingAllSites } = useSite();
+  const navigate = useNavigate();
 
   if (!user) return null;
 
@@ -31,6 +33,11 @@ export const UserProfileButton = () => {
 
   const handleSelectSite = (siteId: string | null) => {
     selectSite(siteId);
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
   };
 
   return (
@@ -93,7 +100,7 @@ export const UserProfileButton = () => {
           </>
         )}
         
-        <DropdownMenuItem onClick={logout} className="text-red-600 cursor-pointer">
+        <DropdownMenuItem onClick={handleLogout} className="text-red-600 cursor-pointer">
           <LogOut className="mr-2 h-4 w-4" />
           <span>Sair</span>
         </DropdownMenuItem>

@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { Site } from "@/types";
 import { useAuth } from "./AuthContext";
-import { getSites } from "@/lib/storage";
+import { getSites, setSelectedSite } from "@/lib/storage";
 
 interface SiteContextType {
   selectedSiteId: string | null;
@@ -38,6 +38,8 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Only master can switch sites
     if (user?.role === 'master') {
       setSelectedSiteId(siteId);
+      // Store selected site in localStorage to persist between page refreshes
+      setSelectedSite(siteId);
     }
   };
 
