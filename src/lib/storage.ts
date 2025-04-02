@@ -1,4 +1,3 @@
-
 import { Employee, TestResult, DrawResult, Site } from "@/types";
 import { getCurrentUser } from "./auth";
 
@@ -16,17 +15,44 @@ const triggerStorageEvent = (key: string) => {
   window.dispatchEvent(new Event('storage'));
 };
 
+// Get the currently selected site ID if any
+const getSelectedSiteId = (): string | null => {
+  const selectedSiteId = localStorage.getItem('irricom_selected_site');
+  return selectedSiteId;
+};
+
 // Filter data based on user's site access
 const filterBySiteAccess = <T extends { siteId?: string }>(data: T[]): T[] => {
   const user = getCurrentUser();
   
   if (!user) return [];
   
-  // Master can see all data
-  if (user.role === 'master') return data;
+  // Master can see all data or filter by selected site
+  if (user.role === 'master') {
+    const selectedSiteId = getSelectedSiteId();
+    if (selectedSiteId) {
+      return data.filter(item => item.siteId === selectedSiteId);
+    }
+    return data;
+  }
   
   // Site users can only see their site's data
   return data.filter(item => item.siteId === user.siteId);
+};
+
+// Store the selected site ID
+export const setSelectedSite = (siteId: string | null): void => {
+  if (siteId) {
+    localStorage.setItem('irricom_selected_site', siteId);
+  } else {
+    localStorage.removeItem('irricom_selected_site');
+  }
+  triggerStorageEvent('irricom_selected_site');
+};
+
+// Get the selected site ID
+export const getSelectedSite = (): string | null => {
+  return getSelectedSiteId();
 };
 
 // Employee functions

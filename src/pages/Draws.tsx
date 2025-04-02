@@ -10,6 +10,7 @@ import { Shuffle, RefreshCw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { useSite } from "@/context/SiteContext";
 
 export default function Draws() {
   const [draws, setDraws] = useState<DrawResult[]>([]);
@@ -17,6 +18,7 @@ export default function Draws() {
   const [formOpen, setFormOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { selectedSiteId } = useSite();
 
   useEffect(() => {
     loadData();
@@ -27,7 +29,7 @@ export default function Draws() {
     return () => {
       window.removeEventListener("storage", loadData);
     };
-  }, []);
+  }, [selectedSiteId]); // Re-load when selected site changes
 
   const loadData = () => {
     setLoading(true);

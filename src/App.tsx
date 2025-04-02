@@ -12,8 +12,24 @@ import Reports from "./pages/Reports";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { SiteProvider } from "./context/SiteContext";
+import { initializeSites } from "./lib/init-data";
+import { useEffect } from "react";
 
 const queryClient = new QueryClient();
+
+// Initialize app data
+const InitializeApp = ({ children }: { children: React.ReactNode }) => {
+  useEffect(() => {
+    // Initialize sites data if not already present
+    const storedSites = localStorage.getItem("irricom_sites");
+    if (!storedSites || JSON.parse(storedSites).length === 0) {
+      initializeSites();
+    }
+  }, []);
+
+  return <>{children}</>;
+};
 
 // Protected route component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -38,37 +54,47 @@ const AppRoutes = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/" element={
           <ProtectedRoute>
-            <AppLayout>
-              <Dashboard />
-            </AppLayout>
+            <SiteProvider>
+              <AppLayout>
+                <Dashboard />
+              </AppLayout>
+            </SiteProvider>
           </ProtectedRoute>
         } />
         <Route path="/employees" element={
           <ProtectedRoute>
-            <AppLayout>
-              <Employees />
-            </AppLayout>
+            <SiteProvider>
+              <AppLayout>
+                <Employees />
+              </AppLayout>
+            </SiteProvider>
           </ProtectedRoute>
         } />
         <Route path="/tests" element={
           <ProtectedRoute>
-            <AppLayout>
-              <Tests />
-            </AppLayout>
+            <SiteProvider>
+              <AppLayout>
+                <Tests />
+              </AppLayout>
+            </SiteProvider>
           </ProtectedRoute>
         } />
         <Route path="/draws" element={
           <ProtectedRoute>
-            <AppLayout>
-              <Draws />
-            </AppLayout>
+            <SiteProvider>
+              <AppLayout>
+                <Draws />
+              </AppLayout>
+            </SiteProvider>
           </ProtectedRoute>
         } />
         <Route path="/reports" element={
           <ProtectedRoute>
-            <AppLayout>
-              <Reports />
-            </AppLayout>
+            <SiteProvider>
+              <AppLayout>
+                <Reports />
+              </AppLayout>
+            </SiteProvider>
           </ProtectedRoute>
         } />
         <Route path="*" element={<NotFound />} />
@@ -80,10 +106,12 @@ const AppRoutes = () => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <TooltipProvider>
-        <AppRoutes />
-        <Toaster />
-      </TooltipProvider>
+      <InitializeApp>
+        <TooltipProvider>
+          <AppRoutes />
+          <Toaster />
+        </TooltipProvider>
+      </InitializeApp>
     </AuthProvider>
   </QueryClientProvider>
 );
