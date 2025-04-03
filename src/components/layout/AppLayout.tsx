@@ -22,7 +22,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const isMobile = useIsMobile();
 
   return (
-    <SidebarProvider defaultOpen={!isMobile}>
+    <SidebarProvider defaultOpen={false}>
       <div className="min-h-screen flex w-full">
         <Sidebar currentPath={currentPath} />
         <main className="flex-1 overflow-x-hidden">
