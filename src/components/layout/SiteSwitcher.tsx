@@ -26,16 +26,16 @@ export const SiteSwitcher = () => {
   };
 
   return (
-    <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-md border shadow-sm">
-      <Building2 className="h-4 w-4 text-blue-600" />
+    <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-md border shadow-sm w-full md:w-auto">
+      <Building2 className="h-4 w-4 text-blue-600 shrink-0" />
       <Select
         value={selectedSiteId || "all"}
         onValueChange={handleSiteChange}
       >
-        <SelectTrigger className="h-8 w-[180px] border-none shadow-none focus:ring-0 px-2">
+        <SelectTrigger className="h-8 min-w-[180px] border-none shadow-none focus:ring-0 px-2">
           <SelectValue placeholder="Selecionar Obra" />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="bg-white">
           <SelectItem value="all" className="font-semibold text-blue-600">
             Todas as Obras
           </SelectItem>

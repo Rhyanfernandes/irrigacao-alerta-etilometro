@@ -21,13 +21,18 @@ import {
   Droplets,
   Wine,
   Shuffle,
+  Menu,
 } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { Button } from "@/components/ui/button";
+import { UserProfileButton } from "./UserProfileButton";
 
 interface SidebarProps {
   currentPath: string;
 }
 
 export function Sidebar({ currentPath }: SidebarProps) {
+  const { user, logout } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
 
   const menuItems = [
@@ -59,13 +64,16 @@ export function Sidebar({ currentPath }: SidebarProps) {
   ];
 
   return (
-    <SidebarComponent
-      collapsible="icon"
-    >
+    <SidebarComponent collapsible="icon">
       <SidebarHeader className="flex items-center gap-2 py-4">
         <Droplets className="h-6 w-6 text-green-600" />
         <span className="font-bold text-lg">Irricom</span>
-        <SidebarTrigger className="ml-auto" />
+        <div className="ml-auto flex items-center gap-2">
+          <div className="md:hidden">
+            <UserProfileButton />
+          </div>
+          <SidebarTrigger className="h-8 w-8" />
+        </div>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
@@ -82,6 +90,27 @@ export function Sidebar({ currentPath }: SidebarProps) {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+        
+        <SidebarGroup className="mt-auto">
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem className="md:hidden">
+                <SidebarMenuButton 
+                  asChild 
+                  onClick={() => {
+                    logout();
+                    window.location.href = "/login";
+                  }}
+                >
+                  <button className="flex items-center gap-3 text-red-600">
+                    <LogOut className="h-5 w-5" />
+                    <span>Sair</span>
+                  </button>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

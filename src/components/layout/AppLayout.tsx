@@ -7,6 +7,7 @@ import { useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { useSite } from "@/context/SiteContext";
 import { SiteSwitcher } from "./SiteSwitcher";
+import { UserProfileButton } from "./UserProfileButton";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -25,16 +26,16 @@ export function AppLayout({ children }: AppLayoutProps) {
         <main className="flex-1 overflow-x-hidden">
           <div className="container mx-auto py-6 px-4 md:px-6">
             {/* Site Notification Banner */}
-            <div className="mb-4">
+            <div className="mb-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
               {user?.role === 'site' && (
-                <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="p-3 bg-blue-50 rounded-lg border border-blue-200 w-full">
                   <p className="font-medium text-blue-700">
                     Você está conectado na obra: <span className="font-bold">{user.siteName}</span>
                   </p>
                 </div>
               )}
               {user?.role === 'master' && isViewingAllSites && (
-                <div className="p-3 bg-purple-50 rounded-lg border border-purple-200 flex justify-between items-center">
+                <div className="p-3 bg-purple-50 rounded-lg border border-purple-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-2 w-full">
                   <p className="font-medium text-purple-700">
                     <span className="font-bold">Conta Master</span> - Visualizando todas as obras
                   </p>
@@ -42,13 +43,17 @@ export function AppLayout({ children }: AppLayoutProps) {
                 </div>
               )}
               {user?.role === 'master' && !isViewingAllSites && selectedSiteId && (
-                <div className="p-3 bg-green-50 rounded-lg border border-green-200 flex justify-between items-center">
+                <div className="p-3 bg-green-50 rounded-lg border border-green-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-2 w-full">
                   <p className="font-medium text-green-700">
                     <span className="font-bold">Conta Master</span> - Filtrando dados para obra específica
                   </p>
                   <SiteSwitcher />
                 </div>
               )}
+              
+              <div className="hidden md:flex">
+                <UserProfileButton />
+              </div>
             </div>
             {children}
           </div>
