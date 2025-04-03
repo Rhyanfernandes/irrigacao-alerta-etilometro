@@ -14,20 +14,17 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import {
-  ClipboardCheck,
   Home,
   Users,
   BarChart3,
   Droplets,
   Wine,
   Shuffle,
-  Menu,
   LogOut,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { Button } from "@/components/ui/button";
-import { UserProfileButton } from "./UserProfileButton";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { UserProfileButton } from "./UserProfileButton";
 
 interface SidebarProps {
   currentPath: string;
@@ -35,7 +32,6 @@ interface SidebarProps {
 
 export function Sidebar({ currentPath }: SidebarProps) {
   const { user, logout } = useAuth();
-  const [collapsed, setCollapsed] = useState(false);
   const isMobile = useIsMobile();
 
   const menuItems = [
@@ -72,14 +68,19 @@ export function Sidebar({ currentPath }: SidebarProps) {
   };
 
   return (
-    <SidebarComponent collapsible={isMobile ? "offcanvas" : "icon"}>
+    <SidebarComponent 
+      collapsible={isMobile ? "offcanvas" : "icon"}
+      variant="sidebar"
+    >
       <SidebarHeader className="flex items-center gap-2 py-4">
         <Droplets className="h-6 w-6 text-green-600" />
         <span className="font-bold text-lg">Irricom</span>
         <div className="ml-auto flex items-center gap-2">
-          <div className="md:hidden">
-            <UserProfileButton />
-          </div>
+          {isMobile && (
+            <div className="mr-2">
+              <UserProfileButton />
+            </div>
+          )}
           <SidebarTrigger className="h-8 w-8" />
         </div>
       </SidebarHeader>
@@ -98,22 +99,13 @@ export function Sidebar({ currentPath }: SidebarProps) {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-        
-        <SidebarGroup className="mt-auto">
-          <SidebarGroupContent>
-            <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton 
-                  asChild 
                   onClick={handleLogout}
+                  className="flex items-center gap-3 text-red-600"
                 >
-                  <button className="flex items-center gap-3 text-red-600">
-                    <LogOut className="h-5 w-5" />
-                    <span>Sair</span>
-                  </button>
+                  <LogOut className="h-5 w-5" />
+                  <span>Sair</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
