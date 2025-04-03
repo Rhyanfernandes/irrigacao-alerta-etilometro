@@ -8,6 +8,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useSite } from "@/context/SiteContext";
 import { SiteSwitcher } from "./SiteSwitcher";
 import { UserProfileButton } from "./UserProfileButton";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -18,6 +19,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const currentPath = location.pathname;
   const { user } = useAuth();
   const { selectedSiteId, isViewingAllSites } = useSite();
+  const isMobile = useIsMobile();
 
   return (
     <SidebarProvider>
@@ -26,7 +28,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         <main className="flex-1 overflow-x-hidden">
           <div className="container mx-auto py-6 px-4 md:px-6">
             {/* Site Notification Banner */}
-            <div className="mb-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
+            <div className="mb-4 flex flex-col gap-2">
               {user?.role === 'site' && (
                 <div className="p-3 bg-blue-50 rounded-lg border border-blue-200 w-full">
                   <p className="font-medium text-blue-700">
@@ -51,7 +53,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                 </div>
               )}
               
-              <div className="hidden md:flex">
+              <div className="hidden md:flex justify-end">
                 <UserProfileButton />
               </div>
             </div>

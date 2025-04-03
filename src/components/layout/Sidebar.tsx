@@ -11,7 +11,6 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  SidebarMenuButtonVariant,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import {
@@ -28,6 +27,7 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { UserProfileButton } from "./UserProfileButton";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface SidebarProps {
   currentPath: string;
@@ -36,6 +36,7 @@ interface SidebarProps {
 export function Sidebar({ currentPath }: SidebarProps) {
   const { user, logout } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
+  const isMobile = useIsMobile();
 
   const menuItems = [
     {
@@ -65,8 +66,13 @@ export function Sidebar({ currentPath }: SidebarProps) {
     },
   ];
 
+  const handleLogout = () => {
+    logout();
+    window.location.href = "/login";
+  };
+
   return (
-    <SidebarComponent collapsible="icon">
+    <SidebarComponent collapsible={isMobile ? "offcanvas" : "icon"}>
       <SidebarHeader className="flex items-center gap-2 py-4">
         <Droplets className="h-6 w-6 text-green-600" />
         <span className="font-bold text-lg">Irricom</span>
@@ -99,13 +105,10 @@ export function Sidebar({ currentPath }: SidebarProps) {
         <SidebarGroup className="mt-auto">
           <SidebarGroupContent>
             <SidebarMenu>
-              <SidebarMenuItem className="md:hidden">
+              <SidebarMenuItem>
                 <SidebarMenuButton 
                   asChild 
-                  onClick={() => {
-                    logout();
-                    window.location.href = "/login";
-                  }}
+                  onClick={handleLogout}
                 >
                   <button className="flex items-center gap-3 text-red-600">
                     <LogOut className="h-5 w-5" />
