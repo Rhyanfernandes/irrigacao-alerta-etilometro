@@ -11,6 +11,7 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
+  SidebarMenuButtonVariant,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import {
@@ -22,6 +23,7 @@ import {
   Wine,
   Shuffle,
   Menu,
+  LogOut,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
