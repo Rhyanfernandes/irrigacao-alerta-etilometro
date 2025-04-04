@@ -22,7 +22,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const isMobile = useIsMobile();
 
   return (
-    <SidebarProvider defaultOpen={false}>
+    <SidebarProvider defaultOpen={!isMobile}>
       <div className="min-h-screen flex w-full">
         <Sidebar currentPath={currentPath} />
         <main className="flex-1 overflow-x-hidden">
@@ -53,7 +53,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                 </div>
               )}
               
-              <div className="hidden md:flex justify-end">
+              <div className={`${isMobile ? "hidden" : "hidden md:flex"} justify-end`}>
                 <UserProfileButton />
               </div>
             </div>

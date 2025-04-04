@@ -69,7 +69,7 @@ export function Sidebar({ currentPath }: SidebarProps) {
 
   return (
     <SidebarComponent 
-      collapsible="offcanvas"
+      collapsible={isMobile ? "offcanvas" : "icon"} // Using icon mode for PC, offcanvas for mobile
       variant="sidebar"
     >
       <SidebarHeader className="flex items-center gap-2 py-4">
