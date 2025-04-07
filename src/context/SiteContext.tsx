@@ -17,10 +17,23 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { user } = useAuth();
   const [selectedSiteId, setSelectedSiteId] = useState<string | null>(null);
   const [sites, setSites] = useState<Site[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Load sites
-    setSites(getSites());
+    const loadSites = async () => {
+      try {
+        const sitesData = await getSites();
+        setSites(sitesData);
+      } catch (error) {
+        console.error("Error loading sites:", error);
+        setSites([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadSites();
 
     // Initialize selected site
     if (user) {

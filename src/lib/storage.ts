@@ -1,3 +1,4 @@
+
 import { Employee, TestResult, DrawResult, Site } from "@/types";
 import { getCurrentUser } from "./auth";
 import {
@@ -71,7 +72,12 @@ export const getSelectedSite = (): string | null => {
 
 // Employee functions
 export const getEmployees = async (): Promise<Employee[]> => {
-  return getEmployeesFromSupabase();
+  try {
+    return await getEmployeesFromSupabase();
+  } catch (error) {
+    console.error("Error fetching employees:", error);
+    return [];
+  }
 };
 
 export const saveEmployee = async (employee: Employee): Promise<Employee | null> => {
@@ -84,7 +90,12 @@ export const deleteEmployee = async (id: string): Promise<boolean> => {
 
 // Test functions
 export const getTests = async (): Promise<TestResult[]> => {
-  return getTestsFromSupabase();
+  try {
+    return await getTestsFromSupabase();
+  } catch (error) {
+    console.error("Error fetching tests:", error);
+    return [];
+  }
 };
 
 export const saveTest = async (test: TestResult): Promise<TestResult | null> => {
@@ -97,7 +108,12 @@ export const deleteTest = async (id: string): Promise<boolean> => {
 
 // Draw functions
 export const getDraws = async (): Promise<DrawResult[]> => {
-  return getDrawsFromSupabase();
+  try {
+    return await getDrawsFromSupabase();
+  } catch (error) {
+    console.error("Error fetching draws:", error);
+    return [];
+  }
 };
 
 export const saveDraw = async (draw: DrawResult): Promise<DrawResult | null> => {
@@ -110,7 +126,12 @@ export const deleteDraw = async (id: string): Promise<boolean> => {
 
 // Site functions
 export const getSites = async (): Promise<Site[]> => {
-  return getSitesFromSupabase();
+  try {
+    return await getSitesFromSupabase();
+  } catch (error) {
+    console.error("Error fetching sites:", error);
+    return [];
+  }
 };
 
 export const saveSite = async (site: Site): Promise<Site | null> => {
