@@ -1,76 +1,89 @@
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { toast } from '@/components/ui/use-toast';
+import { login as supabaseLogin, logout as supabaseLogout, getCurrentUser } from '@/lib/auth';
+import { User, LoginCredentials } from '@/types/auth';
 
-import React, { createContext, useContext, useEffect, useState } from "react";
-import { User, AuthState, LoginCredentials } from "@/types/auth";
-import { login as authLogin, logout as authLogout, getCurrentUser, isAuthenticated as checkAuth } from "@/lib/auth";
-import { useToast } from "@/hooks/use-toast";
-
-interface AuthContextType extends AuthState {
-  login: (credentials: LoginCredentials) => Promise<void>;
-  logout: () => void;
+interface AuthContextType {
+  user: User | null;
+  isAuthenticated: boolean;
   isLoading: boolean;
+  login: (credentials: LoginCredentials) => Promise<void>;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [state, setState] = useState<AuthState>({
-    user: null,
-    isAuthenticated: false,
-    isLoading: true,
-  });
-  const { toast } = useToast();
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if user is already logged in
-    const user = getCurrentUser();
-    setState({
-      user,
-      isAuthenticated: !!user,
-      isLoading: false,
-    });
+    const checkAuth = async () => {
+      try {
+        const currentUser = await getCurrentUser();
+        setUser(currentUser);
+      } catch (error) {
+        console.error('Erro ao verificar autenticação:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkAuth();
   }, []);
 
   const login = async (credentials: LoginCredentials) => {
     try {
-      setState(prev => ({ ...prev, isLoading: true }));
-      const user = await authLogin(credentials);
-      setState({
-        user,
-        isAuthenticated: true,
-        isLoading: false,
-      });
+      setIsLoading(true);
+      const user = await supabaseLogin(credentials);
+      setUser(user);
       toast({
-        title: "Login realizado com sucesso",
+        title: 'Login realizado com sucesso!',
         description: `Bem-vindo, ${user.name}!`,
       });
+      navigate('/tests');
     } catch (error) {
-      setState(prev => ({ ...prev, isLoading: false }));
+      console.error('Erro ao fazer login:', error);
       toast({
-        title: "Erro ao fazer login",
-        description: error instanceof Error ? error.message : "Credenciais inválidas",
-        variant: "destructive",
+        title: 'Erro ao fazer login',
+        description: 'Verifique suas credenciais.',
+        variant: 'destructive',
       });
-      throw error;
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const logout = () => {
-    authLogout();
-    setState({
-      user: null,
-      isAuthenticated: false,
-      isLoading: false,
-    });
-    toast({
-      title: "Logout realizado com sucesso",
-      description: "Você foi desconectado com sucesso",
-    });
+  const logout = async () => {
+    try {
+      setIsLoading(true);
+      await supabaseLogout();
+      setUser(null);
+      toast({
+        title: 'Logout realizado com sucesso!',
+        description: 'Você foi desconectado com sucesso.',
+      });
+      navigate('/login');
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+      toast({
+        title: 'Erro ao fazer logout',
+        description: 'Ocorreu um erro ao desconectar.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <AuthContext.Provider
       value={{
-        ...state,
+        user,
+        isAuthenticated: !!user,
+        isLoading,
         login,
         logout,
       }}
@@ -83,7 +96,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
+    throw new Error('useAuth deve ser usado dentro de um AuthProvider');
   }
   return context;
 };

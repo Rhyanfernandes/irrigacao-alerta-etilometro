@@ -1,6 +1,5 @@
-
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Sidebar as SidebarComponent,
   SidebarContent,
@@ -33,6 +32,7 @@ interface SidebarProps {
 export function Sidebar({ currentPath }: SidebarProps) {
   const { user, logout } = useAuth();
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
 
   const menuItems = [
     {
@@ -62,9 +62,13 @@ export function Sidebar({ currentPath }: SidebarProps) {
     },
   ];
 
-  const handleLogout = () => {
-    logout();
-    window.location.href = "/login";
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate("/login");
+    } catch (error) {
+      console.error("Erro ao fazer logout:", error);
+    }
   };
 
   return (

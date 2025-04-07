@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -19,46 +18,47 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Droplets } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Label } from '@/components/ui/label';
+import { toast } from '@/components/ui/use-toast';
 
 const loginSchema = z.object({
-  email: z.string().email("Email inválido").min(1, "Email é obrigatório"),
-  password: z.string().min(1, "Senha é obrigatória"),
+  email: z.string().email("Email inválido"),
+  password: z.string().min(6, "A senha deve ter no mínimo 6 caracteres"),
 });
 
-type LoginFormValues = z.infer<typeof loginSchema>;
+type LoginFormData = z.infer<typeof loginSchema>;
 
 const Login = () => {
   const { login, isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
   const [error, setError] = React.useState<string | null>(null);
   
-  const form = useForm<LoginFormValues>({
+  const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
   });
 
-  const onSubmit = async (data: LoginFormValues) => {
+  const onSubmit = async (data: LoginFormData) => {
     setError(null);
     try {
       await login(data as LoginCredentials);
-      navigate("/");
+      navigate("/tests");
     } catch (err) {
-      // Show error message
-      setError(err instanceof Error ? err.message : "Erro ao fazer login");
-      console.error(err);
+      console.error('Erro ao fazer login:', err);
+      toast({
+        title: 'Erro ao fazer login',
+        description: 'Verifique suas credenciais e tente novamente.',
+        variant: 'destructive',
+      });
     }
   };
 
-  // If already authenticated, redirect to dashboard
+  // If already authenticated, redirect to tests page
   if (isAuthenticated && !isLoading) {
-    return <Navigate to="/" />;
+    return <Navigate to="/tests" />;
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1 text-center">
           <div className="flex justify-center mb-6">
@@ -85,7 +85,7 @@ const Login = () => {
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input placeholder="seu.email@exemplo.com" {...field} />
+                      <Input placeholder="seu@email.com" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -107,22 +107,12 @@ const Login = () => {
               <Button 
                 type="submit" 
                 className="w-full" 
-                disabled={isLoading}
+                disabled={form.formState.isSubmitting}
               >
-                {isLoading ? "Entrando..." : "Entrar"}
+                {form.formState.isSubmitting ? "Entrando..." : "Entrar"}
               </Button>
             </form>
           </Form>
-          
-          <div className="mt-6 text-center">
-            <div className="text-sm text-gray-500">
-              <p className="mb-1">Contas de teste disponíveis:</p>
-              <p><strong>Admin:</strong> admin@irricom.com / admin123</p>
-              <p><strong>Brumadinho:</strong> brumadinho@irricom.com / brumadinho123</p>
-              <p><strong>Salobo:</strong> salobo@irricom.com / salobo123</p>
-              <p><strong>Hydro:</strong> hydro@irricom.com / hydro123</p>
-            </div>
-          </div>
         </CardContent>
         <CardFooter className="flex flex-col">
           <p className="text-xs text-center text-gray-500 mt-4">

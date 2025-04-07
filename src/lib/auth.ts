@@ -1,103 +1,81 @@
 import { User, LoginCredentials } from "@/types/auth";
+import { supabase, convertSupabaseUser } from "./supabase";
 
 // Storage keys
 const AUTH_USER_KEY = "irricom_auth_user";
 
-// Mock users (in a real app, this would be in a database)
-const MOCK_USERS: User[] = [
-  {
-    id: "1",
-    email: "admin@irricom.com",
-    name: "Administrador Master",
-    role: "master",
-    createdAt: new Date(),
-  },
-  {
-    id: "2",
-    email: "brumadinho@irricom.com",
-    name: "Obra Brumadinho",
-    role: "site",
-    siteId: "brumadinho",
-    siteName: "Brumadinho",
-    createdAt: new Date(),
-  },
-  {
-    id: "3",
-    email: "salobo@irricom.com",
-    name: "Obra Salobo",
-    role: "site",
-    siteId: "salobo",
-    siteName: "Salobo",
-    createdAt: new Date(),
-  },
-  {
-    id: "4",
-    email: "hydro@irricom.com",
-    name: "Obra Hydro",
-    role: "site",
-    siteId: "hydro",
-    siteName: "Hydro",
-    createdAt: new Date(),
-  }
-];
-
-// Mock passwords (in a real app, passwords would be hashed)
-const MOCK_PASSWORDS: Record<string, string> = {
-  "admin@irricom.com": "admin123",
-  "brumadinho@irricom.com": "brumadinho123",
-  "salobo@irricom.com": "salobo123",
-  "hydro@irricom.com": "hydro123",
-};
-
 export const login = async (credentials: LoginCredentials): Promise<User> => {
-  // Simulate API call delay
-  await new Promise(resolve => setTimeout(resolve, 800));
-  
-  const user = MOCK_USERS.find(user => user.email === credentials.email);
-  
-  if (!user || MOCK_PASSWORDS[credentials.email] !== credentials.password) {
-    throw new Error("Credenciais inválidas");
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: credentials.email,
+    password: credentials.password,
+  });
+
+  if (error) {
+    throw new Error(error.message);
   }
-  
-  // Save user to localStorage
+
+  const user = convertSupabaseUser(data.user);
+  if (!user) {
+    throw new Error("Usuário não encontrado");
+  }
+
+  // Save user to localStorage for persistence
   localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
-  
+
   return user;
 };
 
-export const logout = (): void => {
+export const logout = async (): Promise<void> => {
+  const { error } = await supabase.auth.signOut();
+  if (error) {
+    throw new Error(error.message);
+  }
   localStorage.removeItem(AUTH_USER_KEY);
 };
 
-export const getCurrentUser = (): User | null => {
+export const getCurrentUser = async (): Promise<User | null> => {
+  // Primeiro tenta pegar do localStorage
   const userJson = localStorage.getItem(AUTH_USER_KEY);
-  if (!userJson) return null;
+  if (userJson) {
+    try {
+      const user = JSON.parse(userJson);
+      return {
+        ...user,
+        createdAt: new Date(user.createdAt),
+      };
+    } catch (error) {
+      console.error("Error parsing user from localStorage:", error);
+    }
+  }
+
+  // Se não encontrar no localStorage, tenta pegar do Supabase
+  const { data: { user: supabaseUser }, error } = await supabase.auth.getUser();
   
-  try {
-    const user = JSON.parse(userJson);
-    // Ensure dates are properly parsed
-    return {
-      ...user,
-      createdAt: new Date(user.createdAt),
-    };
-  } catch (error) {
-    console.error("Error parsing user from localStorage:", error);
+  if (error || !supabaseUser) {
     return null;
   }
+
+  const user = convertSupabaseUser(supabaseUser);
+  if (user) {
+    localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
+  }
+
+  return user;
 };
 
-export const isAuthenticated = (): boolean => {
-  return getCurrentUser() !== null;
+export const isAuthenticated = async (): Promise<boolean> => {
+  const user = await getCurrentUser();
+  return user !== null;
 };
 
-export const canAccessSite = (siteId: string | undefined): boolean => {
-  const user = getCurrentUser();
+export const canAccessSite = async (siteId: string | undefined): Promise<boolean> => {
+  const user = await getCurrentUser();
   
   if (!user) return false;
   
   // Master can access all sites
   if (user.role === "master") return true;
   
-  // Site users can only access their assigned site
+  // Site users can only access their own site
   return user.siteId === siteId;
 };

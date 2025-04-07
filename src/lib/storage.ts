@@ -1,5 +1,19 @@
 import { Employee, TestResult, DrawResult, Site } from "@/types";
 import { getCurrentUser } from "./auth";
+import {
+  getEmployeesFromSupabase,
+  saveEmployeeToSupabase,
+  deleteEmployeeFromSupabase,
+  getTestsFromSupabase,
+  saveTestToSupabase,
+  deleteTestFromSupabase,
+  getDrawsFromSupabase,
+  saveDrawToSupabase,
+  deleteDrawFromSupabase,
+  getSitesFromSupabase,
+  saveSiteToSupabase,
+  deleteSiteFromSupabase,
+} from './supabase-storage';
 
 // Keys for localStorage
 const STORAGE_KEYS = {
@@ -22,8 +36,8 @@ const getSelectedSiteId = (): string | null => {
 };
 
 // Filter data based on user's site access
-const filterBySiteAccess = <T extends { siteId?: string }>(data: T[]): T[] => {
-  const user = getCurrentUser();
+const filterBySiteAccess = async <T extends { siteId?: string }>(data: T[]): Promise<T[]> => {
+  const user = await getCurrentUser();
   
   if (!user) return [];
   
@@ -56,204 +70,55 @@ export const getSelectedSite = (): string | null => {
 };
 
 // Employee functions
-export const getEmployees = (): Employee[] => {
-  const stored = localStorage.getItem(STORAGE_KEYS.EMPLOYEES);
-  if (!stored) return [];
-  
-  try {
-    const parsed = JSON.parse(stored);
-    // Convert date strings to Date objects
-    const employees = parsed.map((employee: any) => ({
-      ...employee,
-      createdAt: new Date(employee.createdAt),
-    }));
-    
-    return filterBySiteAccess(employees);
-  } catch (error) {
-    console.error("Error parsing employees from localStorage:", error);
-    return [];
-  }
+export const getEmployees = async (): Promise<Employee[]> => {
+  return getEmployeesFromSupabase();
 };
 
-export const saveEmployees = (employees: Employee[]): void => {
-  localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify(employees));
-  triggerStorageEvent(STORAGE_KEYS.EMPLOYEES);
+export const saveEmployee = async (employee: Employee): Promise<Employee | null> => {
+  return saveEmployeeToSupabase(employee);
 };
 
-export const saveEmployee = (employee: Employee): void => {
-  const user = getCurrentUser();
-  
-  // If site user, assign their site to the employee
-  if (user && user.role === 'site' && !employee.siteId) {
-    employee.siteId = user.siteId;
-    employee.siteName = user.siteName;
-  }
-  
-  const employees = getEmployees();
-  const index = employees.findIndex(e => e.id === employee.id);
-  
-  if (index >= 0) {
-    employees[index] = employee;
-  } else {
-    employees.push(employee);
-  }
-  
-  saveEmployees(employees);
-};
-
-export const deleteEmployee = (id: string): void => {
-  const employees = getEmployees();
-  const filtered = employees.filter(employee => employee.id !== id);
-  saveEmployees(filtered);
+export const deleteEmployee = async (id: string): Promise<boolean> => {
+  return deleteEmployeeFromSupabase(id);
 };
 
 // Test functions
-export const getTests = (): TestResult[] => {
-  const stored = localStorage.getItem(STORAGE_KEYS.TESTS);
-  if (!stored) return [];
-  
-  try {
-    const parsed = JSON.parse(stored);
-    // Convert date strings to Date objects
-    const tests = parsed.map((test: any) => ({
-      ...test,
-      date: new Date(test.date),
-      createdAt: new Date(test.createdAt),
-      updatedAt: new Date(test.updatedAt),
-    }));
-    
-    return filterBySiteAccess(tests);
-  } catch (error) {
-    console.error("Error parsing tests from localStorage:", error);
-    return [];
-  }
+export const getTests = async (): Promise<TestResult[]> => {
+  return getTestsFromSupabase();
 };
 
-export const saveTests = (tests: TestResult[]): void => {
-  localStorage.setItem(STORAGE_KEYS.TESTS, JSON.stringify(tests));
-  triggerStorageEvent(STORAGE_KEYS.TESTS);
+export const saveTest = async (test: TestResult): Promise<TestResult | null> => {
+  return saveTestToSupabase(test);
 };
 
-export const saveTest = (test: TestResult): void => {
-  const user = getCurrentUser();
-  
-  // If site user, assign their site to the test
-  if (user && user.role === 'site' && !test.siteId) {
-    test.siteId = user.siteId;
-    test.siteName = user.siteName;
-  }
-  
-  const tests = getTests();
-  const index = tests.findIndex(t => t.id === test.id);
-  
-  if (index >= 0) {
-    tests[index] = test;
-  } else {
-    tests.push(test);
-  }
-  
-  saveTests(tests);
-};
-
-export const deleteTest = (id: string): void => {
-  const tests = getTests();
-  const filtered = tests.filter(test => test.id !== id);
-  saveTests(filtered);
+export const deleteTest = async (id: string): Promise<boolean> => {
+  return deleteTestFromSupabase(id);
 };
 
 // Draw functions
-export const getDraws = (): DrawResult[] => {
-  const stored = localStorage.getItem(STORAGE_KEYS.DRAWS);
-  if (!stored) return [];
-  
-  try {
-    const parsed = JSON.parse(stored);
-    // Convert date strings to Date objects
-    const draws = parsed.map((draw: any) => ({
-      ...draw,
-      date: new Date(draw.date),
-      createdAt: new Date(draw.createdAt),
-    }));
-    
-    return filterBySiteAccess(draws);
-  } catch (error) {
-    console.error("Error parsing draws from localStorage:", error);
-    return [];
-  }
+export const getDraws = async (): Promise<DrawResult[]> => {
+  return getDrawsFromSupabase();
 };
 
-export const saveDraws = (draws: DrawResult[]): void => {
-  localStorage.setItem(STORAGE_KEYS.DRAWS, JSON.stringify(draws));
-  triggerStorageEvent(STORAGE_KEYS.DRAWS);
+export const saveDraw = async (draw: DrawResult): Promise<DrawResult | null> => {
+  return saveDrawToSupabase(draw);
 };
 
-export const saveDraw = (draw: DrawResult): void => {
-  const user = getCurrentUser();
-  
-  // If site user, assign their site to the draw
-  if (user && user.role === 'site' && !draw.siteId) {
-    draw.siteId = user.siteId;
-    draw.siteName = user.siteName;
-  }
-  
-  const draws = getDraws();
-  const index = draws.findIndex(d => d.id === draw.id);
-  
-  if (index >= 0) {
-    draws[index] = draw;
-  } else {
-    draws.push(draw);
-  }
-  
-  saveDraws(draws);
-};
-
-export const deleteDraw = (id: string): void => {
-  const draws = getDraws();
-  const filtered = draws.filter(draw => draw.id !== id);
-  saveDraws(filtered);
+export const deleteDraw = async (id: string): Promise<boolean> => {
+  return deleteDrawFromSupabase(id);
 };
 
 // Site functions
-export const getSites = (): Site[] => {
-  const stored = localStorage.getItem(STORAGE_KEYS.SITES);
-  if (!stored) return [];
-  
-  try {
-    const parsed = JSON.parse(stored);
-    // Convert date strings to Date objects
-    return parsed.map((site: any) => ({
-      ...site,
-      createdAt: new Date(site.createdAt),
-    }));
-  } catch (error) {
-    console.error("Error parsing sites from localStorage:", error);
-    return [];
-  }
+export const getSites = async (): Promise<Site[]> => {
+  return getSitesFromSupabase();
 };
 
-export const saveSites = (sites: Site[]): void => {
-  localStorage.setItem(STORAGE_KEYS.SITES, JSON.stringify(sites));
-  triggerStorageEvent(STORAGE_KEYS.SITES);
+export const saveSite = async (site: Site): Promise<Site | null> => {
+  return saveSiteToSupabase(site);
 };
 
-export const saveSite = (site: Site): void => {
-  const sites = getSites();
-  const index = sites.findIndex(s => s.id === site.id);
-  
-  if (index >= 0) {
-    sites[index] = site;
-  } else {
-    sites.push(site);
-  }
-  
-  saveSites(sites);
-};
-
-export const deleteSite = (id: string): void => {
-  const sites = getSites();
-  const filtered = sites.filter(site => site.id !== id);
-  saveSites(filtered);
+export const deleteSite = async (id: string): Promise<boolean> => {
+  return deleteSiteFromSupabase(id);
 };
 
 // App settings
@@ -287,23 +152,19 @@ export const saveAppSettings = (settings: AppSettings): void => {
 };
 
 // Data export
-export const exportToCSV = (data: any[], fileName: string): void => {
-  // Convert the data to a CSV string
-  const replacer = (_key: string, value: any) => value === null ? '' : value;
-  const header = Object.keys(data[0]);
-  const csv = [
-    header.join(','),
-    ...data.map(row => header.map(fieldName => 
-      JSON.stringify(row[fieldName], replacer)).join(','))
-  ].join('\r\n');
+export const exportToCSV = (data: any[], filename: string) => {
+  const headers = Object.keys(data[0]);
+  const csvContent = [
+    headers.join(','),
+    ...data.map(row => headers.map(header => row[header]).join(','))
+  ].join('\n');
 
-  // Create a download link
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
   const url = URL.createObjectURL(blob);
   
-  const link = document.createElement('a');
   link.setAttribute('href', url);
-  link.setAttribute('download', fileName);
+  link.setAttribute('download', `${filename}.csv`);
   link.style.visibility = 'hidden';
   
   document.body.appendChild(link);
