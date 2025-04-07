@@ -20,17 +20,7 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     // Load sites
-    const loadSites = async () => {
-      try {
-        const sitesData = await getSites();
-        setSites(sitesData);
-      } catch (error) {
-        console.error("Error loading sites:", error);
-        setSites([]);
-      }
-    };
-    
-    loadSites();
+    setSites(getSites());
 
     // Initialize selected site
     if (user) {

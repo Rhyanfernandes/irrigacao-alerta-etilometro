@@ -1,4 +1,3 @@
-
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import { SiteProvider } from './context/SiteContext'
@@ -15,90 +14,83 @@ import Reports from './pages/Reports'
 import { AppLayout } from './components/layout/AppLayout'
 import './App.css'
 
-// Create a separate component that uses hooks after the AuthProvider is in place
-const AppContent = () => {
-  const { user, isAuthenticated, isLoading } = useAuth();
+const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
+  const { isAuthenticated, isLoading } = useAuth()
+
+  if (isLoading) {
+    return <div>Carregando...</div>
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" />
+  }
+
+  return <AppLayout>{children}</AppLayout>
+}
+
+const App = () => {
+  const { isAuthenticated } = useAuth()
 
   useEffect(() => {
     if (isAuthenticated) {
-      migrateDataToSupabase();
+      migrateDataToSupabase()
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated])
 
-  // Create PrivateRoute component here, after AuthProvider is available
-  const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
-    if (isLoading) {
-      return <div>Carregando...</div>;
-    }
-
-    if (!isAuthenticated) {
-      return <Navigate to="/login" />;
-    }
-
-    return <AppLayout>{children}</AppLayout>;
-  };
-
-  return (
-    <SiteProvider>
-      <SidebarProvider>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route
-            path="/"
-            element={
-              <PrivateRoute>
-                <Dashboard />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/tests"
-            element={
-              <PrivateRoute>
-                <Tests />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/employees"
-            element={
-              <PrivateRoute>
-                <Employees />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/draws"
-            element={
-              <PrivateRoute>
-                <Draws />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/reports"
-            element={
-              <PrivateRoute>
-                <Reports />
-              </PrivateRoute>
-            }
-          />
-          <Route path="*" element={<Navigate to="/tests" />} />
-        </Routes>
-      </SidebarProvider>
-    </SiteProvider>
-  );
-};
-
-// App is the entry point and should wrap everything with AuthProvider
-const App = () => {
   return (
     <Router>
       <AuthProvider>
-        <AppContent />
+        <SiteProvider>
+          <SidebarProvider>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route
+                path="/"
+                element={
+                  <PrivateRoute>
+                    <Dashboard />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/tests"
+                element={
+                  <PrivateRoute>
+                    <Tests />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/employees"
+                element={
+                  <PrivateRoute>
+                    <Employees />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/draws"
+                element={
+                  <PrivateRoute>
+                    <Draws />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/reports"
+                element={
+                  <PrivateRoute>
+                    <Reports />
+                  </PrivateRoute>
+                }
+              />
+              <Route path="/" element={<Navigate to="/tests" />} />
+            </Routes>
+          </SidebarProvider>
+        </SiteProvider>
       </AuthProvider>
     </Router>
-  );
-};
+  )
+}
 
-export default App;
+export default App

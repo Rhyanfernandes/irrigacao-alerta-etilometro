@@ -39,7 +39,7 @@ export const SiteSwitcher = () => {
           <SelectItem value="all" className="font-semibold text-blue-600">
             Todas as Obras
           </SelectItem>
-          {sites && sites.length > 0 && sites.map(site => (
+          {sites.map(site => (
             <SelectItem key={site.id} value={site.id}>
               {site.name}
             </SelectItem>
