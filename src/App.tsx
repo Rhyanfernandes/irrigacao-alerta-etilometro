@@ -15,17 +15,6 @@ import Reports from './pages/Reports'
 import { AppLayout } from './components/layout/AppLayout'
 import './App.css'
 
-// Move PrivateRoute inside the AuthProvider context
-const App = () => {
-  return (
-    <Router>
-      <AuthProvider>
-        <AppContent />
-      </AuthProvider>
-    </Router>
-  );
-};
-
 // Create a separate component that uses hooks after the AuthProvider is in place
 const AppContent = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -98,6 +87,17 @@ const AppContent = () => {
         </Routes>
       </SidebarProvider>
     </SiteProvider>
+  );
+};
+
+// App is the entry point and should wrap everything with AuthProvider
+const App = () => {
+  return (
+    <Router>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </Router>
   );
 };
 

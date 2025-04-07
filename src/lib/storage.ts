@@ -1,3 +1,4 @@
+
 import { Employee, TestResult, DrawResult, Site } from "@/types";
 import { getCurrentUser } from "./auth";
 import {
@@ -71,7 +72,8 @@ export const getSelectedSite = (): string | null => {
 
 // Employee functions
 export const getEmployees = async (): Promise<Employee[]> => {
-  return getEmployeesFromSupabase();
+  const employees = await getEmployeesFromSupabase();
+  return employees;
 };
 
 export const saveEmployee = async (employee: Employee): Promise<Employee | null> => {
@@ -84,7 +86,8 @@ export const deleteEmployee = async (id: string): Promise<boolean> => {
 
 // Test functions
 export const getTests = async (): Promise<TestResult[]> => {
-  return getTestsFromSupabase();
+  const tests = await getTestsFromSupabase();
+  return tests;
 };
 
 export const saveTest = async (test: TestResult): Promise<TestResult | null> => {
@@ -97,7 +100,8 @@ export const deleteTest = async (id: string): Promise<boolean> => {
 
 // Draw functions
 export const getDraws = async (): Promise<DrawResult[]> => {
-  return getDrawsFromSupabase();
+  const draws = await getDrawsFromSupabase();
+  return draws;
 };
 
 export const saveDraw = async (draw: DrawResult): Promise<DrawResult | null> => {
@@ -110,7 +114,17 @@ export const deleteDraw = async (id: string): Promise<boolean> => {
 
 // Site functions
 export const getSites = async (): Promise<Site[]> => {
-  return getSitesFromSupabase();
+  try {
+    const sites = await getSitesFromSupabase();
+    if (!sites || sites.length === 0) {
+      // If no sites, return a default empty array
+      return [];
+    }
+    return sites;
+  } catch (error) {
+    console.error("Error fetching sites:", error);
+    return [];
+  }
 };
 
 export const saveSite = async (site: Site): Promise<Site | null> => {

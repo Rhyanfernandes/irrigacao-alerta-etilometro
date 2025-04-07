@@ -80,7 +80,7 @@ export const UserProfileButton = () => {
                 )}
               </DropdownMenuItem>
               
-              {sites.map(site => (
+              {sites && sites.length > 0 && sites.map(site => (
                 <DropdownMenuItem 
                   key={site.id} 
                   className={selectedSiteId === site.id ? "bg-green-50" : ""}

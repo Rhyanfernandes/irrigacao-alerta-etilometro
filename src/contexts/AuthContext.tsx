@@ -1,5 +1,3 @@
 
-// This file will be empty for now as we're using the one in src/context/AuthContext.tsx
-// If needed in the future, we can update this file.
-
+// Re-export from the main context file
 export { AuthProvider, useAuth } from '../context/AuthContext';
