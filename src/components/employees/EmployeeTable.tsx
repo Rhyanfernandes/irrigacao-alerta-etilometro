@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Employee, TestResult } from "@/types";
 import { useNavigate } from "react-router-dom";
@@ -67,16 +68,21 @@ export function EmployeeTable({ employees, onEdit, onDelete }: EmployeeTableProp
     onDelete(id);
   };
   
-  const handleViewTests = (employeeId: string, employeeName: string) => {
-    const allTests = getTests();
-    const employeeTests = allTests.filter(test => test.employeeId === employeeId);
-    
-    if (employeeTests.length === 0) {
-      toast.info(`Não há testes registrados para ${employeeName}`);
-      return;
+  const handleViewTests = async (employeeId: string, employeeName: string) => {
+    try {
+      const allTests = await getTests();
+      const employeeTests = allTests.filter(test => test.employeeId === employeeId);
+      
+      if (employeeTests.length === 0) {
+        toast.info(`Não há testes registrados para ${employeeName}`);
+        return;
+      }
+      
+      navigate('/tests', { state: { employeeFilter: employeeId, employeeName: employeeName } });
+    } catch (error) {
+      console.error("Error fetching tests:", error);
+      toast.error("Erro ao buscar testes do colaborador");
     }
-    
-    navigate('/tests', { state: { employeeFilter: employeeId, employeeName: employeeName } });
   };
 
   return (

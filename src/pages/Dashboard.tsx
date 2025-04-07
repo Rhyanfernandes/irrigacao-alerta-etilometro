@@ -21,21 +21,39 @@ export default function Dashboard() {
   const [tests, setTests] = useState<TestResult[]>([]);
   const [draws, setDraws] = useState<DrawResult[]>([]);
   const [recentTests, setRecentTests] = useState<TestResult[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadData = () => {
-      setEmployees(getEmployees());
-      setTests(getTests());
-      setDraws(getDraws());
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        const [employeesData, testsData, drawsData] = await Promise.all([
+          getEmployees(),
+          getTests(),
+          getDraws()
+        ]);
+        
+        setEmployees(employeesData);
+        setTests(testsData);
+        setDraws(drawsData);
+      } catch (error) {
+        console.error("Error loading dashboard data:", error);
+        // Initialize with empty arrays if we have an error
+        setEmployees([]);
+        setTests([]);
+        setDraws([]);
+      } finally {
+        setLoading(false);
+      }
     };
 
     loadData();
 
     // Add event listener for storage changes
-    window.addEventListener("storage", loadData);
+    window.addEventListener("storage", () => loadData());
 
     return () => {
-      window.removeEventListener("storage", loadData);
+      window.removeEventListener("storage", () => loadData());
     };
   }, []);
 
@@ -46,6 +64,17 @@ export default function Dashboard() {
     );
     setRecentTests(sorted.slice(0, 5));
   }, [tests]);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-700 mx-auto mb-4"></div>
+          <p className="text-gray-600">Carregando dados...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Calculate statistics
   const activeEmployees = employees.filter(e => e.status === "active").length;
@@ -107,7 +136,11 @@ export default function Dashboard() {
         />
         <div className="space-y-4">
           <h2 className="text-xl font-semibold">Testes Recentes</h2>
-          <RecentTestsTable tests={recentTests} />
+          {recentTests.length > 0 ? (
+            <RecentTestsTable tests={recentTests} />
+          ) : (
+            <p className="text-gray-500 text-center py-8">Nenhum teste recente para exibir</p>
+          )}
         </div>
       </div>
     </>
