@@ -1,3 +1,4 @@
+
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import { SiteProvider } from './context/SiteContext'
@@ -14,83 +15,90 @@ import Reports from './pages/Reports'
 import { AppLayout } from './components/layout/AppLayout'
 import './App.css'
 
-const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated, isLoading } = useAuth()
-
-  if (isLoading) {
-    return <div>Carregando...</div>
-  }
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" />
-  }
-
-  return <AppLayout>{children}</AppLayout>
-}
-
+// Move PrivateRoute inside the AuthProvider context
 const App = () => {
-  const { isAuthenticated } = useAuth()
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      migrateDataToSupabase()
-    }
-  }, [isAuthenticated])
-
   return (
     <Router>
       <AuthProvider>
-        <SiteProvider>
-          <SidebarProvider>
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route
-                path="/"
-                element={
-                  <PrivateRoute>
-                    <Dashboard />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/tests"
-                element={
-                  <PrivateRoute>
-                    <Tests />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/employees"
-                element={
-                  <PrivateRoute>
-                    <Employees />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/draws"
-                element={
-                  <PrivateRoute>
-                    <Draws />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/reports"
-                element={
-                  <PrivateRoute>
-                    <Reports />
-                  </PrivateRoute>
-                }
-              />
-              <Route path="/" element={<Navigate to="/tests" />} />
-            </Routes>
-          </SidebarProvider>
-        </SiteProvider>
+        <AppContent />
       </AuthProvider>
     </Router>
-  )
-}
+  );
+};
 
-export default App
+// Create a separate component that uses hooks after the AuthProvider is in place
+const AppContent = () => {
+  const { user, isAuthenticated, isLoading } = useAuth();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      migrateDataToSupabase();
+    }
+  }, [isAuthenticated]);
+
+  // Create PrivateRoute component here, after AuthProvider is available
+  const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
+    if (isLoading) {
+      return <div>Carregando...</div>;
+    }
+
+    if (!isAuthenticated) {
+      return <Navigate to="/login" />;
+    }
+
+    return <AppLayout>{children}</AppLayout>;
+  };
+
+  return (
+    <SiteProvider>
+      <SidebarProvider>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route
+            path="/"
+            element={
+              <PrivateRoute>
+                <Dashboard />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/tests"
+            element={
+              <PrivateRoute>
+                <Tests />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/employees"
+            element={
+              <PrivateRoute>
+                <Employees />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/draws"
+            element={
+              <PrivateRoute>
+                <Draws />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/reports"
+            element={
+              <PrivateRoute>
+                <Reports />
+              </PrivateRoute>
+            }
+          />
+          <Route path="*" element={<Navigate to="/tests" />} />
+        </Routes>
+      </SidebarProvider>
+    </SiteProvider>
+  );
+};
+
+export default App;
