@@ -32,15 +32,17 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Search, MoreHorizontal, Edit, Trash2, AlignJustify, Wine } from "lucide-react";
 import { format } from "date-fns";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface TestTableProps {
   tests: TestResult[];
   onEdit: (test: TestResult) => void;
   onDelete: (id: string) => void;
   onViewDetails: (test: TestResult) => void;
+  loading?: boolean; // Add the loading property
 }
 
-export function TestTable({ tests, onEdit, onDelete, onViewDetails }: TestTableProps) {
+export function TestTable({ tests, onEdit, onDelete, onViewDetails, loading = false }: TestTableProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [deleteId, setDeleteId] = useState<string | null>(null);
   
@@ -73,6 +75,47 @@ export function TestTable({ tests, onEdit, onDelete, onViewDetails }: TestTableP
       }
     }
   };
+
+  // Display loading skeletons when loading is true
+  if (loading) {
+    return (
+      <>
+        <div className="flex gap-4 mb-4">
+          <div className="relative flex-1">
+            <Skeleton className="h-10 w-full" />
+          </div>
+        </div>
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Data</TableHead>
+                <TableHead>Hora</TableHead>
+                <TableHead>Colaborador</TableHead>
+                <TableHead>Resultado</TableHead>
+                <TableHead>Nível (mg/L)</TableHead>
+                <TableHead>Última Atualização</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {[...Array(5)].map((_, index) => (
+                <TableRow key={index}>
+                  <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-10" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                  <TableCell><Skeleton className="h-6 w-16" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-12" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                  <TableCell className="text-right"><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
