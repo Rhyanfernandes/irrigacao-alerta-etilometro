@@ -12,6 +12,7 @@ export default function Employees() {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [formOpen, setFormOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | undefined>(undefined);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadEmployees();
@@ -24,8 +25,17 @@ export default function Employees() {
     };
   }, []);
 
-  const loadEmployees = () => {
-    setEmployees(getEmployees());
+  const loadEmployees = async () => {
+    setLoading(true);
+    try {
+      const data = await getEmployees();
+      setEmployees(data);
+    } catch (error) {
+      console.error("Error loading employees:", error);
+      toast.error("Erro ao carregar colaboradores");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleAddClick = () => {
@@ -38,15 +48,26 @@ export default function Employees() {
     setFormOpen(true);
   };
 
-  const handleSave = (employee: Employee) => {
-    saveEmployee(employee);
-    loadEmployees();
+  const handleSave = async (employee: Employee) => {
+    try {
+      await saveEmployee(employee);
+      await loadEmployees();
+      toast.success("Colaborador salvo com sucesso");
+    } catch (error) {
+      console.error("Error saving employee:", error);
+      toast.error("Erro ao salvar colaborador");
+    }
   };
 
-  const handleDelete = (id: string) => {
-    deleteEmployee(id);
-    loadEmployees();
-    toast.success("Colaborador excluído com sucesso");
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteEmployee(id);
+      await loadEmployees();
+      toast.success("Colaborador excluído com sucesso");
+    } catch (error) {
+      console.error("Error deleting employee:", error);
+      toast.error("Erro ao excluir colaborador");
+    }
   };
 
   return (
@@ -65,6 +86,7 @@ export default function Employees() {
         employees={employees}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        loading={loading}
       />
 
       <EmployeeForm 

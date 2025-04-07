@@ -31,28 +31,49 @@ export default function Draws() {
     };
   }, [selectedSiteId]); // Re-load when selected site changes
 
-  const loadData = () => {
+  const loadData = async () => {
     setLoading(true);
-    setTimeout(() => {
-      setDraws(getDraws());
-      setEmployees(getEmployees());
-      setLoading(false);
-    }, 300); // Pequeno delay para efeito visual
+    try {
+      const [drawsData, employeesData] = await Promise.all([
+        getDraws(),
+        getEmployees()
+      ]);
+      setDraws(drawsData);
+      setEmployees(employeesData);
+    } catch (error) {
+      console.error("Error loading draw data:", error);
+      toast.error("Erro ao carregar dados de sorteios");
+    } finally {
+      setTimeout(() => {
+        setLoading(false);
+      }, 300); // Pequeno delay para efeito visual
+    }
   };
 
   const handleAddClick = () => {
     setFormOpen(true);
   };
 
-  const handleSave = (draw: DrawResult) => {
-    saveDraw(draw);
-    loadData();
+  const handleSave = async (draw: DrawResult) => {
+    try {
+      await saveDraw(draw);
+      await loadData();
+      toast.success("Sorteio salvo com sucesso");
+    } catch (error) {
+      console.error("Error saving draw:", error);
+      toast.error("Erro ao salvar sorteio");
+    }
   };
 
-  const handleDelete = (id: string) => {
-    deleteDraw(id);
-    loadData();
-    toast.success("Sorteio excluído com sucesso");
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteDraw(id);
+      await loadData();
+      toast.success("Sorteio excluído com sucesso");
+    } catch (error) {
+      console.error("Error deleting draw:", error);
+      toast.error("Erro ao excluir sorteio");
+    }
   };
 
   const handleCreateTests = (draw: DrawResult) => {

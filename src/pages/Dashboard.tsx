@@ -21,21 +21,35 @@ export default function Dashboard() {
   const [tests, setTests] = useState<TestResult[]>([]);
   const [draws, setDraws] = useState<DrawResult[]>([]);
   const [recentTests, setRecentTests] = useState<TestResult[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadData = () => {
-      setEmployees(getEmployees());
-      setTests(getTests());
-      setDraws(getDraws());
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        const [employeesData, testsData, drawsData] = await Promise.all([
+          getEmployees(),
+          getTests(),
+          getDraws()
+        ]);
+        
+        setEmployees(employeesData);
+        setTests(testsData);
+        setDraws(drawsData);
+      } catch (error) {
+        console.error("Error loading dashboard data:", error);
+      } finally {
+        setLoading(false);
+      }
     };
 
     loadData();
 
     // Add event listener for storage changes
-    window.addEventListener("storage", loadData);
+    window.addEventListener("storage", () => loadData());
 
     return () => {
-      window.removeEventListener("storage", loadData);
+      window.removeEventListener("storage", () => loadData());
     };
   }, []);
 
@@ -70,6 +84,17 @@ export default function Dashboard() {
     { name: "Negativos", value: negativeTests, color: "#10b981" },
     { name: "Positivos", value: positiveTests, color: "#ef4444" },
   ];
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
+          <p className="mt-4">Carregando dados do dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>

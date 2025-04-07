@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { TestResult, Employee, DrawResult } from "@/types";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -15,6 +16,7 @@ export default function Reports() {
   const [tests, setTests] = useState<TestResult[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [draws, setDraws] = useState<DrawResult[]>([]);
+  const [loading, setLoading] = useState(true);
   
   const [startDate, setStartDate] = useState<Date>(subMonths(new Date(), 1));
   const [endDate, setEndDate] = useState<Date>(new Date());
@@ -44,10 +46,23 @@ export default function Reports() {
     );
   }, [tests, startDate, endDate]);
 
-  const loadData = () => {
-    setTests(getTests());
-    setEmployees(getEmployees());
-    setDraws(getDraws());
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const [testsData, employeesData, drawsData] = await Promise.all([
+        getTests(),
+        getEmployees(),
+        getDraws()
+      ]);
+      setTests(testsData);
+      setEmployees(employeesData);
+      setDraws(drawsData);
+    } catch (error) {
+      console.error("Error loading report data:", error);
+      toast.error("Erro ao carregar dados para relatórios");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleRangeChange = (start: Date, end: Date) => {
@@ -123,6 +138,17 @@ export default function Reports() {
   };
 
   const monthlyData = getMonthlyData();
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
+          <p className="mt-4">Carregando dados para relatórios...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>

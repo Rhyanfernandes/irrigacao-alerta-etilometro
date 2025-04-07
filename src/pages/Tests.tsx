@@ -22,6 +22,7 @@ export default function Tests() {
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | undefined>(undefined);
   const [employeeFilter, setEmployeeFilter] = useState<string | undefined>(undefined);
   const [employeeName, setEmployeeName] = useState<string | undefined>(undefined);
+  const [loading, setLoading] = useState(true);
   
   const location = useLocation();
   const navigate = useNavigate();
@@ -60,9 +61,21 @@ export default function Tests() {
     }
   }, [tests, employeeFilter]);
 
-  const loadData = () => {
-    setTests(getTests());
-    setEmployees(getEmployees());
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const [testsData, employeesData] = await Promise.all([
+        getTests(),
+        getEmployees()
+      ]);
+      setTests(testsData);
+      setEmployees(employeesData);
+    } catch (error) {
+      console.error("Error loading data:", error);
+      toast.error("Erro ao carregar dados");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleAddClick = () => {
@@ -82,15 +95,26 @@ export default function Tests() {
     setDetailsOpen(true);
   };
 
-  const handleSave = (test: TestResult) => {
-    saveTest(test);
-    loadData();
+  const handleSave = async (test: TestResult) => {
+    try {
+      await saveTest(test);
+      await loadData();
+      toast.success("Teste salvo com sucesso");
+    } catch (error) {
+      console.error("Error saving test:", error);
+      toast.error("Erro ao salvar teste");
+    }
   };
 
-  const handleDelete = (id: string) => {
-    deleteTest(id);
-    loadData();
-    toast.success("Teste excluído com sucesso");
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteTest(id);
+      await loadData();
+      toast.success("Teste excluído com sucesso");
+    } catch (error) {
+      console.error("Error deleting test:", error);
+      toast.error("Erro ao excluir teste");
+    }
   };
 
   const clearEmployeeFilter = () => {
@@ -129,6 +153,7 @@ export default function Tests() {
         onEdit={handleEdit}
         onDelete={handleDelete}
         onViewDetails={handleViewDetails}
+        loading={loading}
       />
 
       <TestForm 

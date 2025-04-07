@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Employee, TestResult } from "@/types";
 import { useNavigate } from "react-router-dom";
@@ -46,9 +47,10 @@ interface EmployeeTableProps {
   employees: Employee[];
   onEdit: (employee: Employee) => void;
   onDelete: (id: string) => void;
+  loading?: boolean;
 }
 
-export function EmployeeTable({ employees, onEdit, onDelete }: EmployeeTableProps) {
+export function EmployeeTable({ employees, onEdit, onDelete, loading = false }: EmployeeTableProps) {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterDepartment, setFilterDepartment] = useState("all");
@@ -67,17 +69,31 @@ export function EmployeeTable({ employees, onEdit, onDelete }: EmployeeTableProp
     onDelete(id);
   };
   
-  const handleViewTests = (employeeId: string, employeeName: string) => {
-    const allTests = getTests();
-    const employeeTests = allTests.filter(test => test.employeeId === employeeId);
-    
-    if (employeeTests.length === 0) {
-      toast.info(`Não há testes registrados para ${employeeName}`);
-      return;
+  const handleViewTests = async (employeeId: string, employeeName: string) => {
+    try {
+      const allTests = await getTests();
+      const employeeTests = allTests.filter(test => test.employeeId === employeeId);
+      
+      if (employeeTests.length === 0) {
+        toast.info(`Não há testes registrados para ${employeeName}`);
+        return;
+      }
+      
+      navigate('/tests', { state: { employeeFilter: employeeId, employeeName: employeeName } });
+    } catch (error) {
+      console.error("Error fetching tests:", error);
+      toast.error("Erro ao buscar testes");
     }
-    
-    navigate('/tests', { state: { employeeFilter: employeeId, employeeName: employeeName } });
   };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center p-8">
+        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
+        <span className="ml-3">Carregando colaboradores...</span>
+      </div>
+    );
+  }
 
   return (
     <>
