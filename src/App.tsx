@@ -1,10 +1,10 @@
+
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import { SiteProvider } from './context/SiteContext'
 import { SidebarProvider } from './components/ui/sidebar'
 import { migrateDataToSupabase } from './lib/migrate-to-supabase'
 import { useEffect } from 'react'
-import { useAuth } from './context/AuthContext'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import Tests from './pages/Tests'
@@ -14,9 +14,12 @@ import Reports from './pages/Reports'
 import { AppLayout } from './components/layout/AppLayout'
 import './App.css'
 
-const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated, isLoading } = useAuth()
-
+// Move PrivateRoute to a separate component that gets the auth context from props
+const PrivateRoute = ({ children, isAuthenticated, isLoading }: { 
+  children: React.ReactNode, 
+  isAuthenticated: boolean, 
+  isLoading: boolean 
+}) => {
   if (isLoading) {
     return <div>Carregando...</div>
   }
@@ -28,8 +31,10 @@ const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   return <AppLayout>{children}</AppLayout>
 }
 
-const App = () => {
-  const { isAuthenticated } = useAuth()
+// Create an AppRoutes component that will use the auth context
+const AppRoutes = () => {
+  // Import useAuth here, after the AuthProvider is set up
+  const { isAuthenticated, isLoading, user } = useAuth()
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -38,56 +43,66 @@ const App = () => {
   }, [isAuthenticated])
 
   return (
+    <SiteProvider>
+      <SidebarProvider>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route
+            path="/"
+            element={
+              <PrivateRoute isAuthenticated={isAuthenticated} isLoading={isLoading}>
+                <Dashboard />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/tests"
+            element={
+              <PrivateRoute isAuthenticated={isAuthenticated} isLoading={isLoading}>
+                <Tests />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/employees"
+            element={
+              <PrivateRoute isAuthenticated={isAuthenticated} isLoading={isLoading}>
+                <Employees />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/draws"
+            element={
+              <PrivateRoute isAuthenticated={isAuthenticated} isLoading={isLoading}>
+                <Draws />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/reports"
+            element={
+              <PrivateRoute isAuthenticated={isAuthenticated} isLoading={isLoading}>
+                <Reports />
+              </PrivateRoute>
+            }
+          />
+          <Route path="*" element={<Navigate to="/tests" />} />
+        </Routes>
+      </SidebarProvider>
+    </SiteProvider>
+  )
+}
+
+// Import useAuth here for the AppRoutes component
+import { useAuth } from './context/AuthContext'
+
+// The main App component now just sets up the providers
+const App = () => {
+  return (
     <Router>
       <AuthProvider>
-        <SiteProvider>
-          <SidebarProvider>
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route
-                path="/"
-                element={
-                  <PrivateRoute>
-                    <Dashboard />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/tests"
-                element={
-                  <PrivateRoute>
-                    <Tests />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/employees"
-                element={
-                  <PrivateRoute>
-                    <Employees />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/draws"
-                element={
-                  <PrivateRoute>
-                    <Draws />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/reports"
-                element={
-                  <PrivateRoute>
-                    <Reports />
-                  </PrivateRoute>
-                }
-              />
-              <Route path="/" element={<Navigate to="/tests" />} />
-            </Routes>
-          </SidebarProvider>
-        </SiteProvider>
+        <AppRoutes />
       </AuthProvider>
     </Router>
   )
