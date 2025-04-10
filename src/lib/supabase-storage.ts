@@ -1,4 +1,5 @@
-import { supabase } from './supabase';
+
+import { supabase } from '@/integrations/supabase/client';
 import { Employee, TestResult, DrawResult, Site } from '@/types';
 import { getCurrentUser } from './auth';
 
@@ -22,14 +23,16 @@ export const getEmployeesFromSupabase = async (): Promise<Employee[]> => {
     return [];
   }
   
+  if (!data) return [];
+  
   return data.map((employee: any) => ({
     id: employee.id,
-    name: employee.name,
-    position: employee.position,
-    department: employee.department,
-    registerNumber: employee.register_number,
-    status: employee.status,
-    active: employee.active,
+    name: employee.name || '',
+    position: employee.position || employee.role || '',
+    department: employee.department || '',
+    registerNumber: employee.register_number || employee.cpf || '',
+    status: employee.status || 'active',
+    active: employee.active !== undefined ? employee.active : true,
     siteId: employee.site_id,
     siteName: employee.site_name,
     createdAt: new Date(employee.created_at),
@@ -53,6 +56,7 @@ export const saveEmployeeToSupabase = async (employee: Employee): Promise<Employ
     position: employee.position,
     department: employee.department,
     register_number: employee.registerNumber,
+    cpf: employee.registerNumber,
     status: employee.status,
     active: employee.active,
     site_id: employee.siteId,
@@ -73,12 +77,12 @@ export const saveEmployeeToSupabase = async (employee: Employee): Promise<Employ
   
   return {
     id: data.id,
-    name: data.name,
-    position: data.position,
-    department: data.department,
-    registerNumber: data.register_number,
-    status: data.status,
-    active: data.active,
+    name: data.name || '',
+    position: data.position || data.role || '',
+    department: data.department || '',
+    registerNumber: data.register_number || data.cpf || '',
+    status: data.status || 'active',
+    active: data.active !== undefined ? data.active : true,
     siteId: data.site_id,
     siteName: data.site_name,
     createdAt: new Date(data.created_at),
@@ -119,19 +123,21 @@ export const getTestsFromSupabase = async (): Promise<TestResult[]> => {
     return [];
   }
   
+  if (!data) return [];
+  
   return data.map((test: any) => ({
     id: test.id,
     employeeId: test.employee_id,
-    employeeName: test.employee_name,
+    employeeName: test.employee_name || '',
     date: new Date(test.date),
-    time: test.time,
+    time: test.time || new Date(test.date).toTimeString().slice(0, 5),
     result: test.result,
     alcoholLevel: test.alcohol_level,
-    notes: test.notes,
+    notes: test.notes || '',
     siteId: test.site_id,
-    siteName: test.site_name,
+    siteName: test.site_name || '',
     createdAt: new Date(test.created_at),
-    updatedAt: new Date(test.updated_at),
+    updatedAt: new Date(test.updated_at || test.created_at),
   }));
 };
 
@@ -161,31 +167,36 @@ export const saveTestToSupabase = async (test: TestResult): Promise<TestResult |
     updated_at: test.updatedAt.toISOString(),
   };
   
-  const { data, error } = await supabase
-    .from('tests')
-    .upsert(testData)
-    .select()
-    .single();
-  
-  if (error) {
-    console.error('Erro ao salvar teste:', error);
+  try {
+    const { data, error } = await supabase
+      .from('tests')
+      .upsert(testData)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Erro ao salvar teste:', error);
+      return null;
+    }
+    
+    return {
+      id: data.id,
+      employeeId: data.employee_id,
+      employeeName: data.employee_name || '',
+      date: new Date(data.date),
+      time: data.time || new Date(data.date).toTimeString().slice(0, 5),
+      result: data.result,
+      alcoholLevel: data.alcohol_level,
+      notes: data.notes || '',
+      siteId: data.site_id,
+      siteName: data.site_name || '',
+      createdAt: new Date(data.created_at),
+      updatedAt: new Date(data.updated_at || data.created_at),
+    };
+  } catch (e) {
+    console.error('Exceção ao salvar teste:', e);
     return null;
   }
-  
-  return {
-    id: data.id,
-    employeeId: data.employee_id,
-    employeeName: data.employee_name,
-    date: new Date(data.date),
-    time: data.time,
-    result: data.result,
-    alcoholLevel: data.alcohol_level,
-    notes: data.notes,
-    siteId: data.site_id,
-    siteName: data.site_name,
-    createdAt: new Date(data.created_at),
-    updatedAt: new Date(data.updated_at),
-  };
 };
 
 export const deleteTestFromSupabase = async (id: string): Promise<boolean> => {
@@ -222,15 +233,17 @@ export const getDrawsFromSupabase = async (): Promise<DrawResult[]> => {
     return [];
   }
   
+  if (!data) return [];
+  
   return data.map((draw: any) => ({
     id: draw.id,
     date: new Date(draw.date),
     employees: [], // Array vazio, será preenchido com os funcionários quando necessário
     employeeIds: draw.employee_ids || [],
     employeeNames: draw.employee_names || [],
-    notes: draw.notes,
+    notes: draw.notes || '',
     siteId: draw.site_id,
-    siteName: draw.site_name,
+    siteName: draw.site_name || '',
     createdAt: new Date(draw.created_at),
   }));
 };
@@ -257,28 +270,33 @@ export const saveDrawToSupabase = async (draw: DrawResult): Promise<DrawResult |
     created_at: draw.createdAt.toISOString(),
   };
   
-  const { data, error } = await supabase
-    .from('draws')
-    .upsert(drawData)
-    .select()
-    .single();
-  
-  if (error) {
-    console.error('Erro ao salvar sorteio:', error);
+  try {
+    const { data, error } = await supabase
+      .from('draws')
+      .upsert(drawData)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Erro ao salvar sorteio:', error);
+      return null;
+    }
+    
+    return {
+      id: data.id,
+      date: new Date(data.date),
+      employees: [], // Array vazio, será preenchido com os funcionários quando necessário
+      employeeIds: data.employee_ids || [],
+      employeeNames: data.employee_names || [],
+      notes: data.notes || '',
+      siteId: data.site_id,
+      siteName: data.site_name || '',
+      createdAt: new Date(data.created_at),
+    };
+  } catch (e) {
+    console.error('Exceção ao salvar sorteio:', e);
     return null;
   }
-  
-  return {
-    id: data.id,
-    date: new Date(data.date),
-    employees: [], // Array vazio, será preenchido com os funcionários quando necessário
-    employeeIds: data.employee_ids || [],
-    employeeNames: data.employee_names || [],
-    notes: data.notes,
-    siteId: data.site_id,
-    siteName: data.site_name,
-    createdAt: new Date(data.created_at),
-  };
 };
 
 export const deleteDrawFromSupabase = async (id: string): Promise<boolean> => {
@@ -306,10 +324,12 @@ export const getSitesFromSupabase = async (): Promise<Site[]> => {
     return [];
   }
   
+  if (!data) return [];
+  
   return data.map((site: any) => ({
     id: site.id,
     name: site.name,
-    location: site.location,
+    location: site.address || '',
     createdAt: new Date(site.created_at),
   }));
 };
@@ -318,7 +338,7 @@ export const saveSiteToSupabase = async (site: Site): Promise<Site | null> => {
   const siteData = {
     id: site.id,
     name: site.name,
-    location: site.location,
+    address: site.location,
     created_at: site.createdAt.toISOString(),
   };
   
@@ -336,7 +356,7 @@ export const saveSiteToSupabase = async (site: Site): Promise<Site | null> => {
   return {
     id: data.id,
     name: data.name,
-    location: data.location,
+    location: data.address || '',
     createdAt: new Date(data.created_at),
   };
 };
@@ -353,4 +373,4 @@ export const deleteSiteFromSupabase = async (id: string): Promise<boolean> => {
   }
   
   return true;
-}; 
+};
