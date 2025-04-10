@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -73,7 +74,7 @@ export function Sidebar({ currentPath }: SidebarProps) {
 
   return (
     <SidebarComponent 
-      collapsible={isMobile ? "offcanvas" : "icon"} // Using icon mode for PC, offcanvas for mobile
+      collapsible={isMobile ? "offcanvas" : "icon"} 
       variant="sidebar"
     >
       <SidebarHeader className="flex items-center gap-2 py-4">
@@ -95,8 +96,12 @@ export function Sidebar({ currentPath }: SidebarProps) {
             <SidebarMenu>
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={currentPath === item.url}>
-                    <Link to={item.url} className="flex items-center gap-3">
+                  <SidebarMenuButton 
+                    asChild 
+                    isActive={currentPath === item.url}
+                    className="w-full"
+                  >
+                    <Link to={item.url} className="flex items-center gap-3 w-full">
                       <item.icon className="h-5 w-5" />
                       <span>{item.title}</span>
                     </Link>
@@ -106,7 +111,7 @@ export function Sidebar({ currentPath }: SidebarProps) {
               <SidebarMenuItem>
                 <SidebarMenuButton 
                   onClick={handleLogout}
-                  className="flex items-center gap-3 text-red-600"
+                  className="flex items-center gap-3 text-red-600 w-full"
                 >
                   <LogOut className="h-5 w-5" />
                   <span>Sair</span>

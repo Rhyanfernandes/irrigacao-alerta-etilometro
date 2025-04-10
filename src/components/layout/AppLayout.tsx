@@ -53,7 +53,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                 </div>
               )}
               
-              <div className={`${isMobile ? "hidden" : "hidden md:flex"} justify-end`}>
+              <div className={`${isMobile ? "flex" : "hidden md:flex"} justify-end`}>
                 <UserProfileButton />
               </div>
             </div>
