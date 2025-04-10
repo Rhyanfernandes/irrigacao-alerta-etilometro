@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/components/ui/use-toast';
@@ -37,11 +38,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (credentials: LoginCredentials) => {
     try {
       setIsLoading(true);
-      const user = await supabaseLogin(credentials);
+      const user = await supabaseLogin(credentials.email, credentials.password);
       setUser(user);
       toast({
         title: 'Login realizado com sucesso!',
-        description: `Bem-vindo, ${user.name}!`,
+        description: `Bem-vindo, ${user?.name}!`,
       });
       navigate('/tests');
     } catch (error) {

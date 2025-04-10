@@ -185,7 +185,7 @@ export const saveTestToSupabase = async (test: TestResult): Promise<TestResult |
       employeeName: data.employee_name || '',
       date: new Date(data.date),
       time: data.time || new Date(data.date).toTimeString().slice(0, 5),
-      result: data.result,
+      result: data.result as "positive" | "negative",
       alcoholLevel: data.alcohol_level,
       notes: data.notes || '',
       siteId: data.site_id,

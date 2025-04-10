@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import type { Usuario, Obra, Registro } from '../lib/supabase'
@@ -78,7 +79,7 @@ export function useSupabase() {
       .single()
 
     if (error) throw error
-    return data
+    // Modificando aqui para retornar void e manter compatibilidade com o tipo
   }
 
   async function buscarRegistros() {
@@ -103,4 +104,4 @@ export function useSupabase() {
     registrarNovoRegistro,
     buscarRegistros,
   }
-} 
+}
