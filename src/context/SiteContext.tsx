@@ -26,12 +26,25 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const loadSites = async () => {
       try {
         const sitesData = await getSites();
+        console.log('Sites carregados:', sitesData);
         setSites(sitesData);
         
         // Find the current site if user is a site user
         if (user?.role === 'site' && user.siteId) {
+          console.log('Usuário de obra, definindo site atual:', user.siteId);
           const site = sitesData.find(s => s.id === user.siteId) || null;
           setCurrentSite(site);
+          setSelectedSiteId(user.siteId);
+        } else if (user?.role === 'master') {
+          // Master user - check if there's a stored selected site
+          const storedSiteId = getSelectedSite();
+          console.log('Usuário master, site armazenado:', storedSiteId);
+          
+          if (storedSiteId) {
+            setSelectedSiteId(storedSiteId);
+            const site = sitesData.find(s => s.id === storedSiteId) || null;
+            setCurrentSite(site);
+          }
         }
       } catch (error) {
         console.error("Error loading sites:", error);
@@ -41,35 +54,18 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     };
 
-    loadSites();
-
-    // Initialize selected site
     if (user) {
-      if (user.role === 'site') {
-        // Site users can only see their own site
-        setSelectedSiteId(user.siteId || null);
-      } else {
-        // Master user - check if there's a stored selected site
-        const storedSiteId = getSelectedSite();
-        setSelectedSiteId(storedSiteId);
-        
-        // If a site is selected, find it in the loaded sites
-        if (storedSiteId) {
-          loadSites().then(() => {
-            const site = sites.find(s => s.id === storedSiteId) || null;
-            setCurrentSite(site);
-          });
-        }
-      }
+      loadSites();
     }
   }, [user]);
 
   // Update currentSite whenever selectedSiteId changes
   useEffect(() => {
-    if (selectedSiteId) {
+    if (selectedSiteId && sites.length > 0) {
       const site = sites.find(s => s.id === selectedSiteId) || null;
+      console.log('Site selecionado atualizado:', site);
       setCurrentSite(site);
-    } else {
+    } else if (!selectedSiteId) {
       setCurrentSite(null);
     }
   }, [selectedSiteId, sites]);
@@ -77,11 +73,11 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const selectSite = (siteId: string | null) => {
     // Only master can switch sites
     if (user?.role === 'master') {
+      console.log('Alterando site para:', siteId);
       setSelectedSiteId(siteId);
-      // Store selected site in localStorage to persist between page refreshes
       setSelectedSite(siteId);
       
-      if (siteId) {
+      if (siteId && sites.length > 0) {
         const site = sites.find(s => s.id === siteId) || null;
         setCurrentSite(site);
       } else {

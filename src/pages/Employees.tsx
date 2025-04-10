@@ -14,9 +14,11 @@ export default function Employees() {
   const [formOpen, setFormOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | undefined>(undefined);
   const [loading, setLoading] = useState(true);
-  const { selectedSiteId } = useSite();
+  const { selectedSiteId, currentSite } = useSite();
 
   useEffect(() => {
+    console.log("Employees page - site selecionado mudou:", selectedSiteId);
+    console.log("Employees page - site atual:", currentSite);
     loadEmployees();
 
     // Add event listener for storage changes
@@ -77,7 +79,7 @@ export default function Employees() {
   return (
     <>
       <PageHeader 
-        title="Colaboradores" 
+        title={currentSite ? `Colaboradores - ${currentSite.name}` : "Colaboradores"} 
         description="Gerencie os colaboradores da empresa" 
         action={{
           label: "Novo Colaborador",

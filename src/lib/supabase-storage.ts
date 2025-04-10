@@ -8,41 +8,67 @@ export const getEmployeesFromSupabase = async (): Promise<Employee[]> => {
   
   if (!user) return [];
   
-  let query = supabase.from('employees').select('*, sites(name)');
-  
-  // Se for usuário de obra, filtra apenas os funcionários da obra
-  if (user.role === 'site' && user.siteId) {
-    query = query.eq('site_id', user.siteId);
-  }
-  
-  const { data, error } = await query;
-  
-  if (error) {
-    console.error('Erro ao buscar funcionários:', error);
+  try {
+    // Construir a query básica
+    let query = supabase.from('employees').select('*');
+    
+    // Se for usuário de obra, filtra apenas os funcionários da obra
+    if (user.role === 'site' && user.siteId) {
+      console.log('Filtrando funcionários da obra:', user.siteId);
+      query = query.eq('site_id', user.siteId);
+    } else if (user.role === 'master') {
+      // Se há uma obra selecionada e é usuário master, filtrar por essa obra
+      const selectedSiteId = localStorage.getItem('irricom_selected_site');
+      if (selectedSiteId) {
+        console.log('Master filtrando funcionários da obra selecionada:', selectedSiteId);
+        query = query.eq('site_id', selectedSiteId);
+      }
+    }
+    
+    const { data, error } = await query;
+    
+    if (error) {
+      console.error('Erro ao buscar funcionários:', error);
+      return [];
+    }
+    
+    if (!data) return [];
+    
+    // Carregar nomes das obras para todos os funcionários
+    const siteIds = [...new Set(data.map(emp => emp.site_id).filter(Boolean))];
+    let sitesMap: Record<string, string> = {};
+    
+    if (siteIds.length > 0) {
+      const { data: sitesData } = await supabase
+        .from('sites')
+        .select('id, name')
+        .in('id', siteIds);
+      
+      if (sitesData) {
+        sitesMap = sitesData.reduce((acc: Record<string, string>, site: any) => {
+          acc[site.id] = site.name;
+          return acc;
+        }, {});
+      }
+    }
+    
+    // Mapeando dados do Supabase para a estrutura da aplicação
+    return data.map((employee: any) => ({
+      id: employee.id,
+      name: employee.name || '',
+      position: employee.role || '',
+      department: '',
+      registerNumber: employee.cpf || '',
+      status: 'active',
+      active: true,
+      siteId: employee.site_id,
+      siteName: sitesMap[employee.site_id] || '',
+      createdAt: new Date(employee.created_at),
+    }));
+  } catch (e) {
+    console.error('Exceção ao buscar funcionários:', e);
     return [];
   }
-  
-  if (!data) return [];
-  
-  // Mapeando dados do Supabase para a estrutura da aplicação
-  return data.map((employee: any) => ({
-    id: employee.id,
-    name: employee.name || '',
-    // Usar role como position se não tivermos position no banco
-    position: employee.role || '',
-    // Definindo department como string vazia se não existir
-    department: '',
-    // Usar cpf como registerNumber se não tivermos register_number
-    registerNumber: employee.cpf || '',
-    // Definindo status como "active" por padrão
-    status: 'active',
-    // Definindo active como true por padrão
-    active: true,
-    siteId: employee.site_id,
-    // Usar o nome da obra da relação, se disponível
-    siteName: employee.sites?.name || '',
-    createdAt: new Date(employee.created_at),
-  }));
 };
 
 export const saveEmployeeToSupabase = async (employee: Employee): Promise<Employee | null> => {
@@ -415,24 +441,29 @@ export const deleteDrawFromSupabase = async (id: string): Promise<boolean> => {
 
 // Funções para obras
 export const getSitesFromSupabase = async (): Promise<Site[]> => {
-  const { data, error } = await supabase
-    .from('sites')
-    .select('*')
-    .order('name');
-  
-  if (error) {
-    console.error('Erro ao buscar obras:', error);
+  try {
+    const { data, error } = await supabase
+      .from('sites')
+      .select('*')
+      .order('name');
+    
+    if (error) {
+      console.error('Erro ao buscar obras:', error);
+      return [];
+    }
+    
+    if (!data) return [];
+    
+    return data.map((site: any) => ({
+      id: site.id,
+      name: site.name,
+      location: site.address || '',
+      createdAt: new Date(site.created_at),
+    }));
+  } catch (e) {
+    console.error('Exceção ao buscar obras:', e);
     return [];
   }
-  
-  if (!data) return [];
-  
-  return data.map((site: any) => ({
-    id: site.id,
-    name: site.name,
-    location: site.address || '',
-    createdAt: new Date(site.created_at),
-  }));
 };
 
 export const saveSiteToSupabase = async (site: Site): Promise<Site | null> => {

@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useSite } from "@/context/SiteContext";
 import { useAuth } from "@/context/AuthContext";
 import {
@@ -12,8 +12,13 @@ import {
 import { Building2 } from "lucide-react";
 
 export const SiteSwitcher = () => {
-  const { selectedSiteId, selectSite, sites, isViewingAllSites, currentSite } = useSite();
+  const { selectedSiteId, selectSite, sites, isViewingAllSites } = useSite();
   const { user } = useAuth();
+
+  useEffect(() => {
+    console.log('SiteSwitcher - sites disponíveis:', sites);
+    console.log('SiteSwitcher - site selecionado:', selectedSiteId);
+  }, [sites, selectedSiteId]);
 
   // Only render for master users
   if (!user || user.role !== "master") {
@@ -21,7 +26,7 @@ export const SiteSwitcher = () => {
   }
 
   const handleSiteChange = (value: string) => {
-    console.log("Changing site to:", value);
+    console.log("Alterando site para:", value);
     selectSite(value === "all" ? null : value);
   };
 
@@ -39,11 +44,17 @@ export const SiteSwitcher = () => {
           <SelectItem value="all" className="font-semibold text-blue-600">
             Todas as Obras
           </SelectItem>
-          {Array.isArray(sites) && sites.map(site => (
-            <SelectItem key={site.id} value={site.id}>
-              {site.name}
+          {Array.isArray(sites) && sites.length > 0 ? (
+            sites.map(site => (
+              <SelectItem key={site.id} value={site.id}>
+                {site.name}
+              </SelectItem>
+            ))
+          ) : (
+            <SelectItem value="none" disabled>
+              Nenhuma obra disponível
             </SelectItem>
-          ))}
+          )}
         </SelectContent>
       </Select>
     </div>
