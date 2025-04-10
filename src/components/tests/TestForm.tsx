@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { TestResult, Employee } from "@/types";
 import { Button } from "@/components/ui/button";
@@ -114,7 +115,7 @@ export function TestForm({
       date: formData.date ? new Date(formData.date) : new Date(),
       time: formData.time || format(new Date(), "HH:mm"),
       result: formData.result as "positive" | "negative",
-      notes: formData.notes,
+      notes: formData.notes || "",
       alcoholLevel,
       createdAt: test?.createdAt || new Date(),
       updatedAt: new Date(),
@@ -127,7 +128,8 @@ export function TestForm({
     );
   };
 
-  const activeEmployees = employees.filter(e => e.active);
+  // Filter out inactive employees
+  const activeEmployees = employees.filter(e => e.active !== false);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -145,7 +147,7 @@ export function TestForm({
             <div className="space-y-2">
               <Label htmlFor="employee">Colaborador *</Label>
               <Select
-                value={formData.employeeId}
+                value={formData.employeeId || undefined}
                 onValueChange={(value) => handleChange("employeeId", value)}
                 disabled={!!selectedEmployeeId}
               >
@@ -187,7 +189,7 @@ export function TestForm({
             <div className="space-y-2">
               <Label>Resultado *</Label>
               <RadioGroup
-                value={formData.result}
+                value={formData.result || "negative"}
                 onValueChange={(value) => handleChange("result", value)}
                 className="flex gap-4"
               >
@@ -211,7 +213,7 @@ export function TestForm({
                 max="2"
                 step="0.01"
                 placeholder="0.00"
-                value={formData.alcoholLevel || 0}
+                value={formData.alcoholLevel ?? 0}
                 onChange={(e) => handleChange("alcoholLevel", e.target.value)}
               />
               <p className="text-xs text-muted-foreground">

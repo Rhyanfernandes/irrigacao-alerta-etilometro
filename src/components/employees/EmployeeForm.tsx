@@ -40,6 +40,11 @@ export function EmployeeForm({ open, setOpen, employee, onSave }: EmployeeFormPr
   );
 
   const handleChange = (field: string, value: string | boolean) => {
+    // Ensure department and position are never empty strings
+    if ((field === 'department' || field === 'position') && value === '') {
+      value = ' '; // Use a space instead of empty string
+    }
+    
     setFormData((prev) => ({
       ...prev,
       [field]: value,
@@ -49,16 +54,20 @@ export function EmployeeForm({ open, setOpen, employee, onSave }: EmployeeFormPr
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.name || !formData.department || !formData.position) {
-      toast.error("Preencha todos os campos obrigatórios");
+    if (!formData.name) {
+      toast.error("Preencha o nome do colaborador");
       return;
     }
+
+    // Ensure department and position have default values if empty
+    const department = formData.department || "Geral";
+    const position = formData.position || "Colaborador";
 
     const newEmployee: Employee = {
       id: employee?.id || crypto.randomUUID(),
       name: formData.name || "",
-      department: formData.department || "",
-      position: formData.position || "",
+      department: department,
+      position: position,
       registerNumber: formData.registerNumber || "",
       status: formData.status || "active",
       active: formData.status === "active",

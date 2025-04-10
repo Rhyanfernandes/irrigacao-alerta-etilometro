@@ -56,7 +56,8 @@ export function EmployeeTable({ employees, onEdit, onDelete, loading = false }: 
   const [filterDepartment, setFilterDepartment] = useState("all");
   const [deleteId, setDeleteId] = useState<string | null>(null);
   
-  const departments = [...new Set(employees.map(emp => emp.department))];
+  // Filter out empty departments and make unique list
+  const departments = [...new Set(employees.map(emp => emp.department).filter(dept => dept && dept.trim() !== ""))];
   
   const filteredEmployees = employees.filter(employee => {
     const matchesSearch = employee.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -117,7 +118,9 @@ export function EmployeeTable({ employees, onEdit, onDelete, loading = false }: 
           <SelectContent>
             <SelectItem value="all">Todos os departamentos</SelectItem>
             {departments.map(dept => (
-              <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+              <SelectItem key={dept} value={dept || "unknown"}>
+                {dept || "Sem departamento"}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -146,8 +149,8 @@ export function EmployeeTable({ employees, onEdit, onDelete, loading = false }: 
               filteredEmployees.map((employee) => (
                 <TableRow key={employee.id}>
                   <TableCell>{employee.name}</TableCell>
-                  <TableCell>{employee.department}</TableCell>
-                  <TableCell>{employee.position}</TableCell>
+                  <TableCell>{employee.department || "—"}</TableCell>
+                  <TableCell>{employee.position || "—"}</TableCell>
                   <TableCell>
                     <Badge variant={employee.status === "active" ? "outline" : "secondary"}>
                       {employee.status === "active" ? "Ativo" : "Inativo"}
