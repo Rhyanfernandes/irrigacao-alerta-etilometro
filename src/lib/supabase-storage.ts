@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Employee, TestResult, DrawResult, Site } from '@/types';
 import { getCurrentUser } from './auth';
@@ -9,7 +8,7 @@ export const getEmployeesFromSupabase = async (): Promise<Employee[]> => {
   
   if (!user) return [];
   
-  let query = supabase.from('employees').select('*');
+  let query = supabase.from('employees').select('*, sites(name)');
   
   // Se for usuário de obra, filtra apenas os funcionários da obra
   if (user.role === 'site' && user.siteId) {
@@ -40,8 +39,8 @@ export const getEmployeesFromSupabase = async (): Promise<Employee[]> => {
     // Definindo active como true por padrão
     active: true,
     siteId: employee.site_id,
-    // Se não tivermos site_name, deixamos como string vazia
-    siteName: '',
+    // Usar o nome da obra da relação, se disponível
+    siteName: employee.sites?.name || '',
     createdAt: new Date(employee.created_at),
   }));
 };
@@ -121,7 +120,8 @@ export const getTestsFromSupabase = async (): Promise<TestResult[]> => {
   let query = supabase.from('tests')
     .select(`
       *,
-      employees(name)
+      employees(name),
+      sites(name)
     `);
   
   // Se for usuário de obra, filtra apenas os testes da obra
@@ -142,6 +142,8 @@ export const getTestsFromSupabase = async (): Promise<TestResult[]> => {
   return data.map((test: any) => {
     // Extraindo o nome do funcionário da relação
     const employeeName = test.employees?.name || '';
+    // Extraindo o nome da obra da relação
+    const siteName = test.sites?.name || '';
     
     return {
       id: test.id,
@@ -156,8 +158,8 @@ export const getTestsFromSupabase = async (): Promise<TestResult[]> => {
       // Se não existe campo notes, usar string vazia
       notes: '',
       siteId: test.site_id,
-      // Se não existe campo site_name, usar string vazia
-      siteName: '',
+      // Usar o nome da obra obtido da relação
+      siteName: siteName,
       createdAt: new Date(test.created_at),
       // Se não existe campo updated_at, usar created_at
       updatedAt: new Date(test.created_at),
@@ -250,7 +252,7 @@ export const getDrawsFromSupabase = async (): Promise<DrawResult[]> => {
   if (!user) return [];
   
   // Buscar primeiro os sorteios
-  let drawsQuery = supabase.from('draws').select('*');
+  let drawsQuery = supabase.from('draws').select('*, sites(name)');
   
   // Se for usuário de obra, filtra apenas os sorteios da obra
   if (user.role === 'site' && user.siteId) {
@@ -307,7 +309,7 @@ export const getDrawsFromSupabase = async (): Promise<DrawResult[]> => {
       employeeNames: employeeNames,
       notes: '',
       siteId: draw.site_id,
-      siteName: '',
+      siteName: draw.sites?.name || '',
       createdAt: new Date(draw.created_at),
     };
   }));
@@ -415,7 +417,8 @@ export const deleteDrawFromSupabase = async (id: string): Promise<boolean> => {
 export const getSitesFromSupabase = async (): Promise<Site[]> => {
   const { data, error } = await supabase
     .from('sites')
-    .select('*');
+    .select('*')
+    .order('name');
   
   if (error) {
     console.error('Erro ao buscar obras:', error);

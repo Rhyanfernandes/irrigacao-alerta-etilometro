@@ -18,7 +18,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const location = useLocation();
   const currentPath = location.pathname;
   const { user } = useAuth();
-  const { selectedSiteId, isViewingAllSites } = useSite();
+  const { selectedSiteId, isViewingAllSites, currentSite } = useSite();
   const isMobile = useIsMobile();
 
   return (
@@ -32,7 +32,7 @@ export function AppLayout({ children }: AppLayoutProps) {
               {user?.role === 'site' && (
                 <div className="p-3 bg-blue-50 rounded-lg border border-blue-200 w-full">
                   <p className="font-medium text-blue-700">
-                    Você está conectado na obra: <span className="font-bold">{user.siteName}</span>
+                    Você está conectado na obra: <span className="font-bold">{user.siteName || (currentSite ? currentSite.name : "")}</span>
                   </p>
                 </div>
               )}
@@ -47,7 +47,7 @@ export function AppLayout({ children }: AppLayoutProps) {
               {user?.role === 'master' && !isViewingAllSites && selectedSiteId && (
                 <div className="p-3 bg-green-50 rounded-lg border border-green-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-2 w-full">
                   <p className="font-medium text-green-700">
-                    <span className="font-bold">Conta Master</span> - Filtrando dados para obra específica
+                    <span className="font-bold">Conta Master</span> - Filtrando dados para obra: <span className="font-bold">{currentSite?.name || "Não especificada"}</span>
                   </p>
                   <SiteSwitcher />
                 </div>

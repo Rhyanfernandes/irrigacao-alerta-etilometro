@@ -1,4 +1,3 @@
-
 import { Employee, TestResult, DrawResult, Site } from "@/types";
 import { getCurrentUser } from "./auth";
 import {
@@ -67,7 +66,7 @@ export const setSelectedSite = (siteId: string | null): void => {
 
 // Get the selected site ID
 export const getSelectedSite = (): string | null => {
-  return getSelectedSiteId();
+  return localStorage.getItem('irricom_selected_site');
 };
 
 // Employee functions

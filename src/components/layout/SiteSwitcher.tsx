@@ -12,7 +12,7 @@ import {
 import { Building2 } from "lucide-react";
 
 export const SiteSwitcher = () => {
-  const { selectedSiteId, selectSite, sites, isViewingAllSites } = useSite();
+  const { selectedSiteId, selectSite, sites, isViewingAllSites, currentSite } = useSite();
   const { user } = useAuth();
 
   // Only render for master users

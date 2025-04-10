@@ -19,7 +19,7 @@ import { useNavigate } from "react-router-dom";
 
 export const UserProfileButton = () => {
   const { user, logout } = useAuth();
-  const { sites, selectSite, selectedSiteId, isViewingAllSites } = useSite();
+  const { sites, selectSite, selectedSiteId, isViewingAllSites, currentSite } = useSite();
   const navigate = useNavigate();
 
   if (!user) return null;
@@ -56,7 +56,9 @@ export const UserProfileButton = () => {
             {user.email}
           </p>
           <p className="text-xs font-semibold mt-1 text-blue-600">
-            {user.role === "master" ? "Administrador Master" : `Obra: ${user.siteName}`}
+            {user.role === "master" 
+              ? "Administrador Master" 
+              : `Obra: ${user.siteName || (currentSite ? currentSite.name : "Não especificada")}`}
           </p>
         </div>
         <DropdownMenuSeparator />
