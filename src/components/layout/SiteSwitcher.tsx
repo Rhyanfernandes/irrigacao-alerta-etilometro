@@ -35,7 +35,7 @@ export const SiteSwitcher = () => {
         <SelectTrigger className="h-8 min-w-[180px] border-none shadow-none focus:ring-0 px-2">
           <SelectValue placeholder="Selecionar Obra" />
         </SelectTrigger>
-        <SelectContent className="bg-white">
+        <SelectContent className="bg-white max-h-80 overflow-y-auto">
           <SelectItem value="all" className="font-semibold text-blue-600">
             Todas as Obras
           </SelectItem>

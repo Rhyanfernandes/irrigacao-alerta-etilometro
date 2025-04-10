@@ -1,4 +1,3 @@
-
 import { 
   Table, 
   TableBody, 
@@ -12,6 +11,7 @@ import { TestResult } from "@/types";
 import { format } from "date-fns";
 import { Wine } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { useSite } from "@/context/SiteContext";
 
 interface RecentTestsTableProps {
   tests: TestResult[];
@@ -19,11 +19,14 @@ interface RecentTestsTableProps {
 
 export function RecentTestsTable({ tests }: RecentTestsTableProps) {
   const { user } = useAuth();
+  const { selectedSiteId } = useSite();
   
   // Filter tests based on user's role and site
   const filteredTests = user?.role === 'master' 
-    ? tests // Master sees all tests
-    : tests.filter(test => test.siteId === user?.siteId); // Site users see only their site's tests
+    ? (selectedSiteId 
+        ? tests.filter(test => test.siteId === selectedSiteId) 
+        : tests) // Master vê todos os testes ou apenas da obra selecionada
+    : tests.filter(test => test.siteId === user?.siteId); // Usuários de obra veem apenas testes da sua obra
 
   // Get alcohol level from test or use a default
   const getTestLevel = (test: TestResult) => {

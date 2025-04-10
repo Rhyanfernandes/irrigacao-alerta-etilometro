@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { TestResult, Employee } from "@/types";
 import { Button } from "@/components/ui/button";
@@ -24,6 +23,7 @@ import {
 import { Check, X } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { useAuth } from "@/context/AuthContext";
 
 interface TestFormProps {
   open: boolean;
@@ -42,6 +42,7 @@ export function TestForm({
   onSave,
   selectedEmployeeId
 }: TestFormProps) {
+  const { user } = useAuth();
   const [formData, setFormData] = useState<Partial<TestResult>>(
     test || {
       employeeId: selectedEmployeeId || "",
@@ -49,7 +50,10 @@ export function TestForm({
       time: format(new Date(), "HH:mm"),
       result: "negative",
       notes: "",
-      alcoholLevel: 0.00
+      alcoholLevel: 0.00,
+      // Adicionar siteId e siteName do usuário atual se for usuário de obra
+      siteId: user?.siteId,
+      siteName: user?.siteName
     }
   );
 
@@ -59,10 +63,12 @@ export function TestForm({
       setFormData(prev => ({
         ...prev,
         employeeId: selectedEmployeeId,
-        employeeName: employee?.name
+        employeeName: employee?.name,
+        siteId: employee?.siteId || user?.siteId,
+        siteName: employee?.siteName || user?.siteName
       }));
     }
-  }, [selectedEmployeeId, employees, test]);
+  }, [selectedEmployeeId, employees, test, user]);
 
   const handleChange = (field: string, value: any) => {
     if (field === "employeeId") {
@@ -117,6 +123,9 @@ export function TestForm({
       result: formData.result as "positive" | "negative",
       notes: formData.notes || "",
       alcoholLevel,
+      // Usar siteId e siteName do funcionário ou padrão definido ao iniciar o formulário
+      siteId: employee.siteId || formData.siteId || user?.siteId,
+      siteName: employee.siteName || formData.siteName || user?.siteName,
       createdAt: test?.createdAt || new Date(),
       updatedAt: new Date(),
     };

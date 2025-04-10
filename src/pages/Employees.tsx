@@ -7,12 +7,14 @@ import { EmployeeForm } from "@/components/employees/EmployeeForm";
 import { getEmployees, saveEmployee, deleteEmployee } from "@/lib/storage";
 import { toast } from "sonner";
 import { UserPlus } from "lucide-react";
+import { useSite } from "@/context/SiteContext";
 
 export default function Employees() {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [formOpen, setFormOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | undefined>(undefined);
   const [loading, setLoading] = useState(true);
+  const { selectedSiteId } = useSite();
 
   useEffect(() => {
     loadEmployees();
@@ -23,13 +25,14 @@ export default function Employees() {
     return () => {
       window.removeEventListener("storage", loadEmployees);
     };
-  }, []);
+  }, [selectedSiteId]); // Recarregar quando a obra selecionada mudar
 
   const loadEmployees = async () => {
     setLoading(true);
     try {
       const data = await getEmployees();
       setEmployees(data);
+      console.log('Colaboradores carregados:', data);
     } catch (error) {
       console.error("Error loading employees:", error);
       toast.error("Erro ao carregar colaboradores");
@@ -50,6 +53,7 @@ export default function Employees() {
 
   const handleSave = async (employee: Employee) => {
     try {
+      console.log('Salvando colaborador:', employee);
       await saveEmployee(employee);
       await loadEmployees();
       toast.success("Colaborador salvo com sucesso");

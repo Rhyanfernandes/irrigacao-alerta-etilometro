@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Check, X } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "@/context/AuthContext";
 
 interface EmployeeFormProps {
   open: boolean;
@@ -30,6 +31,7 @@ interface EmployeeFormProps {
 }
 
 export function EmployeeForm({ open, setOpen, employee, onSave }: EmployeeFormProps) {
+  const { user } = useAuth();
   const [formData, setFormData] = useState<Partial<Employee>>(
     employee || {
       name: "",
@@ -71,6 +73,10 @@ export function EmployeeForm({ open, setOpen, employee, onSave }: EmployeeFormPr
       registerNumber: formData.registerNumber || "",
       status: formData.status || "active",
       active: formData.status === "active",
+      // Usar o siteId do funcionário existente ou do usuário atual
+      siteId: employee?.siteId || user?.siteId,
+      // Usar o siteName do funcionário existente ou do usuário atual
+      siteName: employee?.siteName || user?.siteName,
       createdAt: employee?.createdAt || new Date(),
     };
 
