@@ -25,16 +25,23 @@ export const getEmployeesFromSupabase = async (): Promise<Employee[]> => {
   
   if (!data) return [];
   
+  // Mapeando dados do Supabase para a estrutura da aplicação
   return data.map((employee: any) => ({
     id: employee.id,
     name: employee.name || '',
-    position: employee.position || employee.role || '',
-    department: employee.department || '',
-    registerNumber: employee.register_number || employee.cpf || '',
-    status: employee.status || 'active',
-    active: employee.active !== undefined ? employee.active : true,
+    // Usar role como position se não tivermos position no banco
+    position: employee.role || '',
+    // Definindo department como string vazia se não existir
+    department: '',
+    // Usar cpf como registerNumber se não tivermos register_number
+    registerNumber: employee.cpf || '',
+    // Definindo status como "active" por padrão
+    status: 'active',
+    // Definindo active como true por padrão
+    active: true,
     siteId: employee.site_id,
-    siteName: employee.site_name,
+    // Se não tivermos site_name, deixamos como string vazia
+    siteName: '',
     createdAt: new Date(employee.created_at),
   }));
 };
@@ -50,43 +57,45 @@ export const saveEmployeeToSupabase = async (employee: Employee): Promise<Employ
     employee.siteName = user.siteName;
   }
   
+  // Apenas os campos que existem na tabela do Supabase
   const employeeData = {
     id: employee.id,
     name: employee.name,
-    position: employee.position,
-    department: employee.department,
-    register_number: employee.registerNumber,
-    cpf: employee.registerNumber,
-    status: employee.status,
-    active: employee.active,
+    role: employee.position, // Usar position como role
+    cpf: employee.registerNumber, // Usar registerNumber como cpf
     site_id: employee.siteId,
-    site_name: employee.siteName,
     created_at: employee.createdAt.toISOString(),
   };
   
-  const { data, error } = await supabase
-    .from('employees')
-    .upsert(employeeData)
-    .select()
-    .single();
-  
-  if (error) {
-    console.error('Erro ao salvar funcionário:', error);
+  try {
+    const { data, error } = await supabase
+      .from('employees')
+      .upsert(employeeData)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Erro ao salvar funcionário:', error);
+      return null;
+    }
+    
+    // Adaptação do retorno para o formato da aplicação
+    return {
+      id: data.id,
+      name: data.name || '',
+      position: data.role || '',
+      department: '',
+      registerNumber: data.cpf || '',
+      status: 'active',
+      active: true,
+      siteId: data.site_id,
+      siteName: '',
+      createdAt: new Date(data.created_at),
+    };
+  } catch (e) {
+    console.error('Exceção ao salvar funcionário:', e);
     return null;
   }
-  
-  return {
-    id: data.id,
-    name: data.name || '',
-    position: data.position || data.role || '',
-    department: data.department || '',
-    registerNumber: data.register_number || data.cpf || '',
-    status: data.status || 'active',
-    active: data.active !== undefined ? data.active : true,
-    siteId: data.site_id,
-    siteName: data.site_name,
-    createdAt: new Date(data.created_at),
-  };
 };
 
 export const deleteEmployeeFromSupabase = async (id: string): Promise<boolean> => {
@@ -109,7 +118,11 @@ export const getTestsFromSupabase = async (): Promise<TestResult[]> => {
   
   if (!user) return [];
   
-  let query = supabase.from('tests').select('*');
+  let query = supabase.from('tests')
+    .select(`
+      *,
+      employees(name)
+    `);
   
   // Se for usuário de obra, filtra apenas os testes da obra
   if (user.role === 'site' && user.siteId) {
@@ -125,20 +138,31 @@ export const getTestsFromSupabase = async (): Promise<TestResult[]> => {
   
   if (!data) return [];
   
-  return data.map((test: any) => ({
-    id: test.id,
-    employeeId: test.employee_id,
-    employeeName: test.employee_name || '',
-    date: new Date(test.date),
-    time: test.time || new Date(test.date).toTimeString().slice(0, 5),
-    result: test.result,
-    alcoholLevel: test.alcohol_level,
-    notes: test.notes || '',
-    siteId: test.site_id,
-    siteName: test.site_name || '',
-    createdAt: new Date(test.created_at),
-    updatedAt: new Date(test.updated_at || test.created_at),
-  }));
+  // Mapeando dados do Supabase para a estrutura da aplicação
+  return data.map((test: any) => {
+    // Extraindo o nome do funcionário da relação
+    const employeeName = test.employees?.name || '';
+    
+    return {
+      id: test.id,
+      employeeId: test.employee_id,
+      employeeName: employeeName,
+      date: new Date(test.date),
+      // Se não existe campo time, usar a hora da data
+      time: new Date(test.date).toTimeString().slice(0, 5),
+      // Forçando o tipo para "positive" ou "negative"
+      result: (test.result === "positive" ? "positive" : "negative") as "positive" | "negative",
+      alcoholLevel: test.alcohol_level,
+      // Se não existe campo notes, usar string vazia
+      notes: '',
+      siteId: test.site_id,
+      // Se não existe campo site_name, usar string vazia
+      siteName: '',
+      createdAt: new Date(test.created_at),
+      // Se não existe campo updated_at, usar created_at
+      updatedAt: new Date(test.created_at),
+    };
+  });
 };
 
 export const saveTestToSupabase = async (test: TestResult): Promise<TestResult | null> => {
@@ -152,19 +176,15 @@ export const saveTestToSupabase = async (test: TestResult): Promise<TestResult |
     test.siteName = user.siteName;
   }
   
+  // Apenas os campos que existem na tabela do Supabase
   const testData = {
     id: test.id,
     employee_id: test.employeeId,
-    employee_name: test.employeeName,
     date: test.date.toISOString(),
-    time: test.time,
     result: test.result,
     alcohol_level: test.alcoholLevel,
-    notes: test.notes,
     site_id: test.siteId,
-    site_name: test.siteName,
     created_at: test.createdAt.toISOString(),
-    updated_at: test.updatedAt.toISOString(),
   };
   
   try {
@@ -179,19 +199,29 @@ export const saveTestToSupabase = async (test: TestResult): Promise<TestResult |
       return null;
     }
     
+    // Após salvar, buscar o nome do funcionário
+    const employeeResponse = await supabase
+      .from('employees')
+      .select('name')
+      .eq('id', data.employee_id)
+      .single();
+
+    const employeeName = employeeResponse.data?.name || '';
+    
+    // Adaptação do retorno para o formato da aplicação
     return {
       id: data.id,
       employeeId: data.employee_id,
-      employeeName: data.employee_name || '',
+      employeeName: employeeName,
       date: new Date(data.date),
-      time: data.time || new Date(data.date).toTimeString().slice(0, 5),
-      result: data.result as "positive" | "negative",
+      time: new Date(data.date).toTimeString().slice(0, 5),
+      result: (data.result === "positive" ? "positive" : "negative") as "positive" | "negative",
       alcoholLevel: data.alcohol_level,
-      notes: data.notes || '',
+      notes: '',
       siteId: data.site_id,
-      siteName: data.site_name || '',
+      siteName: '',
       createdAt: new Date(data.created_at),
-      updatedAt: new Date(data.updated_at || data.created_at),
+      updatedAt: new Date(data.created_at),
     };
   } catch (e) {
     console.error('Exceção ao salvar teste:', e);
@@ -219,33 +249,70 @@ export const getDrawsFromSupabase = async (): Promise<DrawResult[]> => {
   
   if (!user) return [];
   
-  let query = supabase.from('draws').select('*');
+  // Buscar primeiro os sorteios
+  let drawsQuery = supabase.from('draws').select('*');
   
   // Se for usuário de obra, filtra apenas os sorteios da obra
   if (user.role === 'site' && user.siteId) {
-    query = query.eq('site_id', user.siteId);
+    drawsQuery = drawsQuery.eq('site_id', user.siteId);
   }
   
-  const { data, error } = await query;
+  const { data: drawsData, error: drawsError } = await drawsQuery;
   
-  if (error) {
-    console.error('Erro ao buscar sorteios:', error);
+  if (drawsError) {
+    console.error('Erro ao buscar sorteios:', drawsError);
     return [];
   }
   
-  if (!data) return [];
+  if (!drawsData || drawsData.length === 0) return [];
   
-  return data.map((draw: any) => ({
-    id: draw.id,
-    date: new Date(draw.date),
-    employees: [], // Array vazio, será preenchido com os funcionários quando necessário
-    employeeIds: draw.employee_ids || [],
-    employeeNames: draw.employee_names || [],
-    notes: draw.notes || '',
-    siteId: draw.site_id,
-    siteName: draw.site_name || '',
-    createdAt: new Date(draw.created_at),
+  // Para cada sorteio, buscar informações do funcionário
+  const draws = await Promise.all(drawsData.map(async (draw: any) => {
+    // Buscar funcionário relacionado se houver employee_id
+    let employee = null;
+    let employeeIds: string[] = [];
+    let employeeNames: string[] = [];
+    
+    if (draw.employee_id) {
+      const { data: employeeData } = await supabase
+        .from('employees')
+        .select('*')
+        .eq('id', draw.employee_id)
+        .single();
+      
+      if (employeeData) {
+        employee = {
+          id: employeeData.id,
+          name: employeeData.name,
+          position: employeeData.role || '',
+          department: '',
+          registerNumber: employeeData.cpf || '',
+          status: 'active',
+          active: true,
+          siteId: employeeData.site_id,
+          siteName: '',
+          createdAt: new Date(employeeData.created_at),
+        };
+        
+        employeeIds = [employeeData.id];
+        employeeNames = [employeeData.name];
+      }
+    }
+    
+    return {
+      id: draw.id,
+      date: new Date(draw.date),
+      employees: employee ? [employee] : [],
+      employeeIds: employeeIds,
+      employeeNames: employeeNames,
+      notes: '',
+      siteId: draw.site_id,
+      siteName: '',
+      createdAt: new Date(draw.created_at),
+    };
   }));
+  
+  return draws;
 };
 
 export const saveDrawToSupabase = async (draw: DrawResult): Promise<DrawResult | null> => {
@@ -259,14 +326,15 @@ export const saveDrawToSupabase = async (draw: DrawResult): Promise<DrawResult |
     draw.siteName = user.siteName;
   }
   
+  // Usar o primeiro funcionário sorteado como employee_id
+  const employeeId = draw.employeeIds.length > 0 ? draw.employeeIds[0] : null;
+  
+  // Apenas os campos que existem na tabela do Supabase
   const drawData = {
     id: draw.id,
     date: draw.date.toISOString(),
-    employee_ids: draw.employeeIds,
-    employee_names: draw.employeeNames,
-    notes: draw.notes,
+    employee_id: employeeId,
     site_id: draw.siteId,
-    site_name: draw.siteName,
     created_at: draw.createdAt.toISOString(),
   };
   
@@ -282,15 +350,45 @@ export const saveDrawToSupabase = async (draw: DrawResult): Promise<DrawResult |
       return null;
     }
     
+    // Buscar informações do funcionário
+    let employee = null;
+    let employeeNames: string[] = [];
+    
+    if (data.employee_id) {
+      const { data: employeeData } = await supabase
+        .from('employees')
+        .select('*')
+        .eq('id', data.employee_id)
+        .single();
+      
+      if (employeeData) {
+        employee = {
+          id: employeeData.id,
+          name: employeeData.name,
+          position: employeeData.role || '',
+          department: '',
+          registerNumber: employeeData.cpf || '',
+          status: 'active',
+          active: true,
+          siteId: employeeData.site_id,
+          siteName: '',
+          createdAt: new Date(employeeData.created_at),
+        };
+        
+        employeeNames = [employeeData.name];
+      }
+    }
+    
+    // Adaptação do retorno para o formato da aplicação
     return {
       id: data.id,
       date: new Date(data.date),
-      employees: [], // Array vazio, será preenchido com os funcionários quando necessário
-      employeeIds: data.employee_ids || [],
-      employeeNames: data.employee_names || [],
-      notes: data.notes || '',
+      employees: employee ? [employee] : [],
+      employeeIds: data.employee_id ? [data.employee_id] : [],
+      employeeNames: employeeNames,
+      notes: '',
       siteId: data.site_id,
-      siteName: data.site_name || '',
+      siteName: '',
       createdAt: new Date(data.created_at),
     };
   } catch (e) {

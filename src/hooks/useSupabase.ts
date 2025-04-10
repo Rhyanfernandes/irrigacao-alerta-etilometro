@@ -61,10 +61,10 @@ export function useSupabase() {
     if (error) throw error
   }
 
-  async function registrarNovoRegistro(valor: number, observacao?: string) {
+  async function registrarNovoRegistro(valor: number, observacao?: string): Promise<void> {
     if (!usuario || !obra) throw new Error('Usuário ou obra não encontrados')
 
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('registros')
       .insert([
         {
@@ -75,11 +75,9 @@ export function useSupabase() {
           data: new Date().toISOString(),
         },
       ])
-      .select()
-      .single()
 
     if (error) throw error
-    // Modificando aqui para retornar void e manter compatibilidade com o tipo
+    // Retorna void para manter a compatibilidade de tipo
   }
 
   async function buscarRegistros() {
