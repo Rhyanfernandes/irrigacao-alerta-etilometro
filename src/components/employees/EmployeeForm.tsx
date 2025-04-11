@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Employee } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +22,7 @@ import {
 import { Check, X } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
+import { useSite } from "@/context/SiteContext";
 
 interface EmployeeFormProps {
   open: boolean;
@@ -32,6 +33,7 @@ interface EmployeeFormProps {
 
 export function EmployeeForm({ open, setOpen, employee, onSave }: EmployeeFormProps) {
   const { user } = useAuth();
+  const { currentSite, selectedSiteId } = useSite();
   const [formData, setFormData] = useState<Partial<Employee>>(
     employee || {
       name: "",
@@ -40,6 +42,34 @@ export function EmployeeForm({ open, setOpen, employee, onSave }: EmployeeFormPr
       status: "active",
     }
   );
+
+  // Atualiza os dados do formulário quando o currentSite muda
+  useEffect(() => {
+    if (!employee && currentSite) {
+      setFormData(prev => ({
+        ...prev,
+        siteId: currentSite.id,
+        siteName: currentSite.name
+      }));
+    }
+  }, [currentSite, employee]);
+
+  // Inicializa o formulário com os dados corretos do funcionário ou da obra selecionada
+  useEffect(() => {
+    if (employee) {
+      setFormData(employee);
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        name: "",
+        department: "",
+        position: "",
+        status: "active",
+        siteId: currentSite?.id || selectedSiteId || user?.siteId,
+        siteName: currentSite?.name || user?.siteName,
+      }));
+    }
+  }, [employee, currentSite, selectedSiteId, user]);
 
   const handleChange = (field: string, value: string | boolean) => {
     // Ensure department and position are never empty strings
@@ -65,6 +95,15 @@ export function EmployeeForm({ open, setOpen, employee, onSave }: EmployeeFormPr
     const department = formData.department || "Geral";
     const position = formData.position || "Colaborador";
 
+    // Garantir que o siteId está definido
+    const siteId = formData.siteId || currentSite?.id || selectedSiteId || user?.siteId;
+    const siteName = formData.siteName || currentSite?.name || user?.siteName;
+
+    if (!siteId) {
+      toast.error("Nenhuma obra selecionada. Selecione uma obra primeiro.");
+      return;
+    }
+
     const newEmployee: Employee = {
       id: employee?.id || crypto.randomUUID(),
       name: formData.name || "",
@@ -73,13 +112,12 @@ export function EmployeeForm({ open, setOpen, employee, onSave }: EmployeeFormPr
       registerNumber: formData.registerNumber || "",
       status: formData.status || "active",
       active: formData.status === "active",
-      // Usar o siteId do funcionário existente ou do usuário atual
-      siteId: employee?.siteId || user?.siteId,
-      // Usar o siteName do funcionário existente ou do usuário atual
-      siteName: employee?.siteName || user?.siteName,
+      siteId: siteId,
+      siteName: siteName,
       createdAt: employee?.createdAt || new Date(),
     };
 
+    console.log("Salvando colaborador com dados:", newEmployee);
     onSave(newEmployee);
     setOpen(false);
     toast.success(
@@ -96,6 +134,11 @@ export function EmployeeForm({ open, setOpen, employee, onSave }: EmployeeFormPr
           </DialogTitle>
           <DialogDescription>
             Preencha as informações do colaborador abaixo.
+            {currentSite && (
+              <p className="mt-1 text-sm font-medium text-blue-600">
+                Obra: {currentSite.name}
+              </p>
+            )}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>

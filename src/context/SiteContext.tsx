@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { Site } from "@/types";
 import { useAuth } from "./AuthContext";
 import { getSites, getSelectedSite, setSelectedSite } from "@/lib/storage";
+import { toast } from "sonner";
 
 interface SiteContextType {
   selectedSiteId: string | null;
@@ -44,6 +45,12 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setSelectedSiteId(storedSiteId);
             const site = sitesData.find(s => s.id === storedSiteId) || null;
             setCurrentSite(site);
+          } else if (sitesData.length > 0) {
+            // Se não há site selecionado mas existem sites, selecionar o primeiro
+            setSelectedSiteId(sitesData[0].id);
+            setCurrentSite(sitesData[0]);
+            setSelectedSite(sitesData[0].id);
+            console.log('Nenhum site selecionado, selecionando o primeiro:', sitesData[0].id);
           }
         }
       } catch (error) {

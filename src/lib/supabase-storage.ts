@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Employee, TestResult, DrawResult, Site } from '@/types';
 import { getCurrentUser } from './auth';
@@ -57,10 +58,10 @@ export const getEmployeesFromSupabase = async (): Promise<Employee[]> => {
       id: employee.id,
       name: employee.name || '',
       position: employee.role || '',
-      department: '',
+      department: employee.department || '',
       registerNumber: employee.cpf || '',
-      status: 'active',
-      active: true,
+      status: employee.active ? 'active' : 'inactive',
+      active: employee.active !== false,
       siteId: employee.site_id,
       siteName: sitesMap[employee.site_id] || '',
       createdAt: new Date(employee.created_at),
@@ -76,10 +77,38 @@ export const saveEmployeeToSupabase = async (employee: Employee): Promise<Employ
   
   if (!user) return null;
   
-  // Se for usuário de obra, atribui a obra ao funcionário
-  if (user.role === 'site' && !employee.siteId) {
-    employee.siteId = user.siteId;
-    employee.siteName = user.siteName;
+  console.log('Salvando funcionário no Supabase:', employee);
+  
+  // Se o funcionário não tem uma obra, verificar se há uma selecionada
+  if (!employee.siteId) {
+    // Verificar se o usuário master tem uma obra selecionada
+    if (user.role === 'master') {
+      const selectedSiteId = localStorage.getItem('irricom_selected_site');
+      if (selectedSiteId) {
+        employee.siteId = selectedSiteId;
+        // Buscar o nome da obra
+        const { data } = await supabase
+          .from('sites')
+          .select('name')
+          .eq('id', selectedSiteId)
+          .single();
+        
+        if (data) {
+          employee.siteName = data.name;
+        }
+      }
+    } 
+    // Se for usuário de obra, atribui a obra ao funcionário
+    else if (user.role === 'site') {
+      employee.siteId = user.siteId;
+      employee.siteName = user.siteName;
+    }
+  }
+
+  // Verificar se conseguimos atribuir uma obra
+  if (!employee.siteId) {
+    console.error('Não foi possível salvar o funcionário - nenhuma obra selecionada');
+    return null;
   }
   
   // Apenas os campos que existem na tabela do Supabase
@@ -87,10 +116,14 @@ export const saveEmployeeToSupabase = async (employee: Employee): Promise<Employ
     id: employee.id,
     name: employee.name,
     role: employee.position, // Usar position como role
+    department: employee.department, // Adicionar department
     cpf: employee.registerNumber, // Usar registerNumber como cpf
     site_id: employee.siteId,
+    active: employee.status === 'active',
     created_at: employee.createdAt.toISOString(),
   };
+  
+  console.log('Dados enviados para o Supabase:', employeeData);
   
   try {
     const { data, error } = await supabase
@@ -104,17 +137,19 @@ export const saveEmployeeToSupabase = async (employee: Employee): Promise<Employ
       return null;
     }
     
+    console.log('Funcionário salvo com sucesso:', data);
+    
     // Adaptação do retorno para o formato da aplicação
     return {
       id: data.id,
       name: data.name || '',
       position: data.role || '',
-      department: '',
+      department: data.department || '',
       registerNumber: data.cpf || '',
-      status: 'active',
-      active: true,
+      status: data.active ? 'active' : 'inactive',
+      active: data.active !== false,
       siteId: data.site_id,
-      siteName: '',
+      siteName: employee.siteName || '', // Usar o nome da obra que foi passado
       createdAt: new Date(data.created_at),
     };
   } catch (e) {

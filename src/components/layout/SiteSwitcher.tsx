@@ -10,15 +10,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Building2 } from "lucide-react";
+import { toast } from "sonner";
 
 export const SiteSwitcher = () => {
-  const { selectedSiteId, selectSite, sites, isViewingAllSites } = useSite();
+  const { selectedSiteId, selectSite, sites, isViewingAllSites, currentSite } = useSite();
   const { user } = useAuth();
 
   useEffect(() => {
     console.log('SiteSwitcher - sites disponíveis:', sites);
     console.log('SiteSwitcher - site selecionado:', selectedSiteId);
-  }, [sites, selectedSiteId]);
+    console.log('SiteSwitcher - site atual:', currentSite);
+  }, [sites, selectedSiteId, currentSite]);
 
   // Only render for master users
   if (!user || user.role !== "master") {
@@ -27,7 +29,16 @@ export const SiteSwitcher = () => {
 
   const handleSiteChange = (value: string) => {
     console.log("Alterando site para:", value);
-    selectSite(value === "all" ? null : value);
+    if (value === "all") {
+      selectSite(null);
+      toast.success("Visualizando todas as obras");
+    } else {
+      const selectedSite = sites.find(site => site.id === value);
+      selectSite(value);
+      if (selectedSite) {
+        toast.success(`Obra ${selectedSite.name} selecionada`);
+      }
+    }
   };
 
   return (

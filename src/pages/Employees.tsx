@@ -8,17 +8,20 @@ import { getEmployees, saveEmployee, deleteEmployee } from "@/lib/storage";
 import { toast } from "sonner";
 import { UserPlus } from "lucide-react";
 import { useSite } from "@/context/SiteContext";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Employees() {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [formOpen, setFormOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | undefined>(undefined);
   const [loading, setLoading] = useState(true);
-  const { selectedSiteId, currentSite } = useSite();
+  const { selectedSiteId, currentSite, isViewingAllSites } = useSite();
+  const { user } = useAuth();
 
   useEffect(() => {
-    console.log("Employees page - site selecionado mudou:", selectedSiteId);
+    console.log("Employees page - site selecionado:", selectedSiteId);
     console.log("Employees page - site atual:", currentSite);
+    console.log("Employees page - visualizando todas as obras:", isViewingAllSites);
     loadEmployees();
 
     // Add event listener for storage changes
@@ -33,8 +36,23 @@ export default function Employees() {
     setLoading(true);
     try {
       const data = await getEmployees();
-      setEmployees(data);
       console.log('Colaboradores carregados:', data);
+      
+      // Se for usuário de obra, filtra apenas os funcionários da obra
+      if (user?.role === 'site' && user.siteId) {
+        const filteredEmployees = data.filter(emp => emp.siteId === user.siteId);
+        setEmployees(filteredEmployees);
+      } 
+      // Se for usuário master e tiver uma obra selecionada, filtra por essa obra
+      else if (user?.role === 'master' && selectedSiteId && !isViewingAllSites) {
+        console.log('Filtrando apenas colaboradores da obra:', selectedSiteId);
+        const filteredEmployees = data.filter(emp => emp.siteId === selectedSiteId);
+        setEmployees(filteredEmployees);
+      }
+      // Caso contrário, mostra todos
+      else {
+        setEmployees(data);
+      }
     } catch (error) {
       console.error("Error loading employees:", error);
       toast.error("Erro ao carregar colaboradores");
@@ -76,10 +94,17 @@ export default function Employees() {
     }
   };
 
+  // Determinar o título da página
+  const pageTitle = isViewingAllSites
+    ? "Colaboradores - Todas as Obras"
+    : currentSite
+    ? `Colaboradores - ${currentSite.name}`
+    : "Colaboradores";
+
   return (
     <>
       <PageHeader 
-        title={currentSite ? `Colaboradores - ${currentSite.name}` : "Colaboradores"} 
+        title={pageTitle} 
         description="Gerencie os colaboradores da empresa" 
         action={{
           label: "Novo Colaborador",
