@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Employee, TestResult, DrawResult, Site } from '@/types';
 import { getCurrentUser } from './auth';
@@ -57,7 +58,7 @@ export const getEmployeesFromSupabase = async (): Promise<Employee[]> => {
       id: employee.id,
       name: employee.name || '',
       position: employee.role || '',
-      department: employee.department || '',
+      department: '', // A coluna department não existe no banco, usando valor padrão vazio
       registerNumber: employee.cpf || '',
       status: employee.active === false ? 'inactive' : 'active',
       active: employee.active !== false,
@@ -140,10 +141,10 @@ export const saveEmployeeToSupabase = async (employee: Employee): Promise<Employ
       id: data.id,
       name: data.name || '',
       position: data.role || '',
-      department: employee.department || '',
+      department: '', // A coluna department não existe no banco, usando valor padrão vazio
       registerNumber: data.cpf || '',
-      status: employee.status || 'active',
-      active: employee.status !== 'inactive',
+      status: 'active', // Status padrão, já que não existe no banco
+      active: true, // Active padrão, já que não existe no banco
       siteId: data.site_id,
       siteName: employee.siteName || '',
       createdAt: new Date(data.created_at),
