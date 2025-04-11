@@ -11,6 +11,7 @@ interface SiteContextType {
   sites: Site[];
   isViewingAllSites: boolean;
   currentSite: Site | null;
+  setViewAllSites: (viewAll: boolean) => void;
 }
 
 const SiteContext = createContext<SiteContextType | undefined>(undefined);
@@ -20,6 +21,7 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [selectedSiteId, setSelectedSiteId] = useState<string | null>(null);
   const [sites, setSites] = useState<Site[]>([]);
   const [currentSite, setCurrentSite] = useState<Site | null>(null);
+  const [isViewingAllSites, setIsViewingAllSites] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -37,20 +39,30 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setCurrentSite(site);
           setSelectedSiteId(user.siteId);
         } else if (user?.role === 'master') {
-          // Master user - check if there's a stored selected site
-          const storedSiteId = getSelectedSite();
-          console.log('Usuário master, site armazenado:', storedSiteId);
+          // Verificar se o usuário quer ver todas as obras
+          const viewAllSitesStored = localStorage.getItem('irricom_view_all_sites') === 'true';
+          setIsViewingAllSites(viewAllSitesStored);
           
-          if (storedSiteId) {
-            setSelectedSiteId(storedSiteId);
-            const site = sitesData.find(s => s.id === storedSiteId) || null;
-            setCurrentSite(site);
-          } else if (sitesData.length > 0) {
-            // Se não há site selecionado mas existem sites, selecionar o primeiro
-            setSelectedSiteId(sitesData[0].id);
-            setCurrentSite(sitesData[0]);
-            setSelectedSite(sitesData[0].id);
-            console.log('Nenhum site selecionado, selecionando o primeiro:', sitesData[0].id);
+          if (viewAllSitesStored) {
+            console.log('Visualizando todas as obras');
+            setSelectedSiteId(null);
+            setCurrentSite(null);
+          } else {
+            // Master user - check if there's a stored selected site
+            const storedSiteId = getSelectedSite();
+            console.log('Usuário master, site armazenado:', storedSiteId);
+            
+            if (storedSiteId) {
+              setSelectedSiteId(storedSiteId);
+              const site = sitesData.find(s => s.id === storedSiteId) || null;
+              setCurrentSite(site);
+            } else if (sitesData.length > 0) {
+              // Se não há site selecionado mas existem sites, selecionar o primeiro
+              setSelectedSiteId(sitesData[0].id);
+              setCurrentSite(sitesData[0]);
+              setSelectedSite(sitesData[0].id);
+              console.log('Nenhum site selecionado, selecionando o primeiro:', sitesData[0].id);
+            }
           }
         }
       } catch (error) {
@@ -84,16 +96,36 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSelectedSiteId(siteId);
       setSelectedSite(siteId);
       
-      if (siteId && sites.length > 0) {
+      if (siteId) {
         const site = sites.find(s => s.id === siteId) || null;
         setCurrentSite(site);
+        setIsViewingAllSites(false);
+        localStorage.setItem('irricom_view_all_sites', 'false');
       } else {
         setCurrentSite(null);
+        setIsViewingAllSites(true);
+        localStorage.setItem('irricom_view_all_sites', 'true');
       }
     }
   };
 
-  const isViewingAllSites = selectedSiteId === null && user?.role === 'master';
+  const setViewAllSites = (viewAll: boolean) => {
+    if (user?.role === 'master') {
+      setIsViewingAllSites(viewAll);
+      localStorage.setItem('irricom_view_all_sites', viewAll.toString());
+      
+      if (viewAll) {
+        setSelectedSiteId(null);
+        setCurrentSite(null);
+        setSelectedSite(null);
+      } else if (sites.length > 0 && !selectedSiteId) {
+        // Se desativar a visualização de todas as obras, selecionar a primeira
+        setSelectedSiteId(sites[0].id);
+        setCurrentSite(sites[0]);
+        setSelectedSite(sites[0].id);
+      }
+    }
+  };
 
   return (
     <SiteContext.Provider
@@ -102,7 +134,8 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
         selectSite,
         sites,
         isViewingAllSites,
-        currentSite
+        currentSite,
+        setViewAllSites
       }}
     >
       {children}

@@ -18,9 +18,11 @@ export const getEmployeesFromSupabase = async (): Promise<Employee[]> => {
       console.log('Filtrando funcionários da obra:', user.siteId);
       query = query.eq('site_id', user.siteId);
     } else if (user.role === 'master') {
-      // Se há uma obra selecionada e é usuário master, filtrar por essa obra
+      // Para usuário master, não filtrar por obra por padrão para ver todos
+      const viewAllSites = localStorage.getItem('irricom_view_all_sites') === 'true';
       const selectedSiteId = localStorage.getItem('irricom_selected_site');
-      if (selectedSiteId) {
+      
+      if (selectedSiteId && !viewAllSites) {
         console.log('Master filtrando funcionários da obra selecionada:', selectedSiteId);
         query = query.eq('site_id', selectedSiteId);
       }
@@ -105,10 +107,17 @@ export const saveEmployeeToSupabase = async (employee: Employee): Promise<Employ
     }
   }
 
-  // Verificar se conseguimos atribuir uma obra
+  // Se ainda não temos uma obra, tentar usar a primeira disponível
   if (!employee.siteId) {
-    console.error('Não foi possível salvar o funcionário - nenhuma obra selecionada');
-    return null;
+    const { data: sites } = await supabase.from('sites').select('id, name').limit(1);
+    if (sites && sites.length > 0) {
+      employee.siteId = sites[0].id;
+      employee.siteName = sites[0].name;
+      console.log('Atribuindo primeira obra disponível:', sites[0].name);
+    } else {
+      console.error('Não foi possível salvar o funcionário - nenhuma obra disponível');
+      return null;
+    }
   }
   
   // Apenas os campos que existem na tabela do Supabase

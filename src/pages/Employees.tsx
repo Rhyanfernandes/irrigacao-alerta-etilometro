@@ -30,7 +30,7 @@ export default function Employees() {
     return () => {
       window.removeEventListener("storage", loadEmployees);
     };
-  }, [selectedSiteId]); // Recarregar quando a obra selecionada mudar
+  }, [selectedSiteId, isViewingAllSites]); // Recarregar quando a obra selecionada ou visualização mudar
 
   const loadEmployees = async () => {
     setLoading(true);
