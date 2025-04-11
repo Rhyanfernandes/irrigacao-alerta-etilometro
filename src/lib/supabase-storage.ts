@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Employee, TestResult, DrawResult, Site } from '@/types';
 import { getCurrentUser } from './auth';
@@ -60,7 +59,7 @@ export const getEmployeesFromSupabase = async (): Promise<Employee[]> => {
       position: employee.role || '',
       department: employee.department || '',
       registerNumber: employee.cpf || '',
-      status: employee.active ? 'active' : 'inactive',
+      status: employee.active === false ? 'inactive' : 'active',
       active: employee.active !== false,
       siteId: employee.site_id,
       siteName: sitesMap[employee.site_id] || '',
@@ -115,11 +114,9 @@ export const saveEmployeeToSupabase = async (employee: Employee): Promise<Employ
   const employeeData = {
     id: employee.id,
     name: employee.name,
-    role: employee.position, // Usar position como role
-    department: employee.department, // Adicionar department
-    cpf: employee.registerNumber, // Usar registerNumber como cpf
+    role: employee.position,
+    cpf: employee.registerNumber,
     site_id: employee.siteId,
-    active: employee.status === 'active',
     created_at: employee.createdAt.toISOString(),
   };
   
@@ -139,17 +136,16 @@ export const saveEmployeeToSupabase = async (employee: Employee): Promise<Employ
     
     console.log('Funcionário salvo com sucesso:', data);
     
-    // Adaptação do retorno para o formato da aplicação
     return {
       id: data.id,
       name: data.name || '',
       position: data.role || '',
-      department: data.department || '',
+      department: employee.department || '',
       registerNumber: data.cpf || '',
-      status: data.active ? 'active' : 'inactive',
-      active: data.active !== false,
+      status: employee.status || 'active',
+      active: employee.status !== 'inactive',
       siteId: data.site_id,
-      siteName: employee.siteName || '', // Usar o nome da obra que foi passado
+      siteName: employee.siteName || '',
       createdAt: new Date(data.created_at),
     };
   } catch (e) {
