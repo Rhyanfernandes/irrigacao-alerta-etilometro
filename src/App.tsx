@@ -4,7 +4,7 @@ import { AuthProvider } from './context/AuthContext'
 import { SiteProvider } from './context/SiteContext'
 import { SidebarProvider } from './components/ui/sidebar'
 import { migrateDataToSupabase } from './lib/migrate-to-supabase'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import Tests from './pages/Tests'
@@ -14,6 +14,9 @@ import Reports from './pages/Reports'
 import { AppLayout } from './components/layout/AppLayout'
 import './App.css'
 
+// Import useAuth here for the AppRoutes component
+import { useAuth } from './context/AuthContext'
+
 // Move PrivateRoute to a separate component that gets the auth context from props
 const PrivateRoute = ({ children, isAuthenticated, isLoading }: { 
   children: React.ReactNode, 
@@ -21,26 +24,33 @@ const PrivateRoute = ({ children, isAuthenticated, isLoading }: {
   isLoading: boolean 
 }) => {
   if (isLoading) {
-    return <div>Carregando...</div>
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
+        <span className="ml-3">Carregando...</span>
+      </div>
+    );
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" />
+    return <Navigate to="/login" />;
   }
 
-  return <AppLayout>{children}</AppLayout>
-}
+  return <AppLayout>{children}</AppLayout>;
+};
 
 // Create an AppRoutes component that will use the auth context
 const AppRoutes = () => {
-  // Import useAuth here, after the AuthProvider is set up
-  const { isAuthenticated, isLoading, user } = useAuth()
+  // Use auth context
+  const { isAuthenticated, isLoading, user } = useAuth();
+  const [hasMigrated, setHasMigrated] = useState(false);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      migrateDataToSupabase()
+    if (isAuthenticated && !hasMigrated) {
+      migrateDataToSupabase();
+      setHasMigrated(true);
     }
-  }, [isAuthenticated])
+  }, [isAuthenticated, hasMigrated]);
 
   return (
     <SiteProvider>
@@ -87,15 +97,12 @@ const AppRoutes = () => {
               </PrivateRoute>
             }
           />
-          <Route path="*" element={<Navigate to="/tests" />} />
+          <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </SidebarProvider>
     </SiteProvider>
-  )
-}
-
-// Import useAuth here for the AppRoutes component
-import { useAuth } from './context/AuthContext'
+  );
+};
 
 // The main App component now just sets up the providers
 const App = () => {
@@ -105,7 +112,7 @@ const App = () => {
         <AppRoutes />
       </AuthProvider>
     </Router>
-  )
-}
+  );
+};
 
-export default App
+export default App;

@@ -6,7 +6,10 @@ import { getCurrentUser } from './auth';
 export const getEmployeesFromSupabase = async (): Promise<Employee[]> => {
   const user = await getCurrentUser();
   
-  if (!user) return [];
+  if (!user) {
+    console.error('Usuário não autenticado ao buscar funcionários');
+    return [];
+  }
   
   try {
     // Construir a query básica
@@ -51,7 +54,7 @@ export const getEmployeesFromSupabase = async (): Promise<Employee[]> => {
       id: employee.id,
       name: employee.name || '',
       position: employee.role || '',
-      department: '', // A coluna department não existe no banco, usando valor padrão vazio
+      department: employee.department || '', // Caso não exista, valor padrão vazio
       registerNumber: employee.cpf || '',
       status: employee.active === false ? 'inactive' : 'active',
       active: employee.active !== false,
@@ -68,12 +71,17 @@ export const getEmployeesFromSupabase = async (): Promise<Employee[]> => {
 export const saveEmployeeToSupabase = async (employee: Employee): Promise<Employee | null> => {
   const user = await getCurrentUser();
   
-  if (!user) return null;
+  if (!user) {
+    console.error('Usuário não autenticado ao salvar funcionário');
+    return null;
+  }
   
   console.log('Salvando funcionário no Supabase:', employee);
+  console.log('Usuário atual:', user);
   
   // Verificar permissão - usuários de obra só podem salvar funcionários da sua obra
   if (user.role === 'site' && user.siteId) {
+    console.log('Forçando siteId do usuário:', user.siteId);
     // Forçar o siteId do usuário para evitar mudanças não autorizadas
     employee.siteId = user.siteId;
     employee.siteName = user.siteName || '';
@@ -81,6 +89,7 @@ export const saveEmployeeToSupabase = async (employee: Employee): Promise<Employ
   
   // Se ainda não há um siteId definido (caso raro), tentar usar o do usuário 
   if (!employee.siteId) {
+    console.log('Sem siteId definido, buscando alternativas');
     // Verificar se o usuário master tem uma obra selecionada
     if (user.role === 'master') {
       const selectedSiteId = localStorage.getItem('irricom_selected_site');
@@ -96,17 +105,20 @@ export const saveEmployeeToSupabase = async (employee: Employee): Promise<Employ
         if (data) {
           employee.siteName = data.name;
         }
+        console.log('Usando site selecionado pelo master:', selectedSiteId);
       }
     } 
     // Se for usuário de obra, atribui a obra ao funcionário
     else if (user.role === 'site') {
       employee.siteId = user.siteId;
       employee.siteName = user.siteName;
+      console.log('Atribuindo site do usuário de obra:', user.siteId);
     }
   }
 
   // Se ainda não temos uma obra, tentar usar a primeira disponível
   if (!employee.siteId) {
+    console.log('Tentando encontrar primeira obra disponível');
     const { data: sites } = await supabase.from('sites').select('id, name').limit(1);
     if (sites && sites.length > 0) {
       employee.siteId = sites[0].id;
@@ -126,6 +138,8 @@ export const saveEmployeeToSupabase = async (employee: Employee): Promise<Employ
     cpf: employee.registerNumber,
     site_id: employee.siteId,
     created_at: employee.createdAt.toISOString(),
+    department: employee.department || '', // Adicionando department
+    active: employee.status === 'active' // Adicionando active
   };
   
   console.log('Dados enviados para o Supabase:', employeeData);
@@ -148,10 +162,10 @@ export const saveEmployeeToSupabase = async (employee: Employee): Promise<Employ
       id: data.id,
       name: data.name || '',
       position: data.role || '',
-      department: '', // A coluna department não existe no banco, usando valor padrão vazio
+      department: data.department || '', // Usando o valor do banco ou valor padrão
       registerNumber: data.cpf || '',
-      status: 'active', // Status padrão, já que não existe no banco
-      active: true, // Active padrão, já que não existe no banco
+      status: data.active === false ? 'inactive' : 'active',
+      active: data.active !== false,
       siteId: data.site_id,
       siteName: employee.siteName || '',
       createdAt: new Date(data.created_at),

@@ -45,24 +45,42 @@ export function EmployeeForm({ open, setOpen, employee, onSave }: EmployeeFormPr
 
   // Inicializa o formulário com os dados corretos do funcionário ou da obra selecionada
   useEffect(() => {
+    console.log("EmployeeForm - Inicializando com:", {
+      employee,
+      currentSite,
+      selectedSiteId,
+      user
+    });
+    
     if (employee) {
+      console.log("Editando funcionário existente:", employee);
       setFormData(employee);
     } else {
-      let siteId = currentSite?.id;
-      let siteName = currentSite?.name;
+      let siteId = null;
+      let siteName = null;
 
       // Se for usuário de obra, usar a obra do usuário
-      if (user?.role === 'site') {
+      if (user?.role === 'site' && user.siteId) {
+        console.log("Usuário de obra, usando site:", user.siteId, user.siteName);
         siteId = user.siteId;
         siteName = user.siteName;
       } else if (user?.role === 'master' && selectedSiteId) {
         // Se for master e tiver obra selecionada, usar a obra selecionada
+        console.log("Master com site selecionado:", selectedSiteId);
         const selectedSite = sites.find(s => s.id === selectedSiteId);
+        siteId = selectedSiteId;
         if (selectedSite) {
           siteName = selectedSite.name;
         }
+      } else if (currentSite) {
+        // Usar site atual como fallback
+        console.log("Usando site atual como fallback:", currentSite.id);
+        siteId = currentSite.id;
+        siteName = currentSite.name;
       }
 
+      console.log("Inicializando novo funcionário com site:", siteId, siteName);
+      
       setFormData({
         name: "",
         department: "",
@@ -103,22 +121,32 @@ export function EmployeeForm({ open, setOpen, employee, onSave }: EmployeeFormPr
     let siteName = formData.siteName;
     
     // Se for usuário de obra, forçar a obra do usuário
-    if (user?.role === 'site') {
+    if (user?.role === 'site' && user.siteId) {
+      console.log("Forçando site do usuário de obra:", user.siteId);
       siteId = user.siteId;
       siteName = user.siteName;
     } else if (!siteId && user?.role === 'master' && selectedSiteId) {
       // Se for master sem siteId definido mas com obra selecionada
+      console.log("Master com site selecionado:", selectedSiteId);
       siteId = selectedSiteId;
       const selectedSite = sites.find(s => s.id === selectedSiteId);
       if (selectedSite) {
         siteName = selectedSite.name;
       }
+    } else if (!siteId && currentSite) {
+      // Fallback para o site atual
+      console.log("Usando site atual como fallback:", currentSite.id);
+      siteId = currentSite.id;
+      siteName = currentSite.name;
     }
 
     if (!siteId) {
       toast.error("Nenhuma obra selecionada. Selecione uma obra primeiro.");
+      console.error("Tentativa de salvar sem obra definida");
       return;
     }
+
+    console.log("Salvando colaborador com site:", siteId, siteName);
 
     const newEmployee: Employee = {
       id: employee?.id || crypto.randomUUID(),
@@ -152,13 +180,17 @@ export function EmployeeForm({ open, setOpen, employee, onSave }: EmployeeFormPr
             Preencha as informações do colaborador abaixo.
             {user?.role === 'site' ? (
               <p className="mt-1 text-sm font-medium text-blue-600">
-                Obra: {user.siteName}
+                Obra: {user.siteName || "Sua Obra"}
               </p>
-            ) : currentSite && (
+            ) : selectedSiteId ? (
+              <p className="mt-1 text-sm font-medium text-blue-600">
+                Obra: {sites.find(s => s.id === selectedSiteId)?.name || "Obra Selecionada"}
+              </p>
+            ) : currentSite ? (
               <p className="mt-1 text-sm font-medium text-blue-600">
                 Obra: {currentSite.name}
               </p>
-            )}
+            ) : null}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>

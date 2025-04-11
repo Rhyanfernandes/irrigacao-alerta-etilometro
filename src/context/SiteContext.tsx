@@ -28,11 +28,13 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Load sites
     const loadSites = async () => {
       try {
+        console.log("SiteContext - Carregando sites, usuário:", user);
         const sitesData = await getSites();
         console.log('Sites carregados:', sitesData);
         
         // For site users, filter to only show their assigned site
         if (user?.role === 'site' && user.siteId) {
+          console.log('Usuário de obra, filtrando para o site:', user.siteId);
           const filteredSites = sitesData.filter(s => s.id === user.siteId);
           setSites(filteredSites);
           
@@ -43,6 +45,7 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setIsViewingAllSites(false);
         } else if (user?.role === 'master') {
           // Master user can see all sites
+          console.log('Usuário master, carregando todos os sites');
           setSites(sitesData);
           
           // Verificar se o usuário quer ver todas as obras
@@ -70,6 +73,11 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
               console.log('Nenhum site selecionado, selecionando o primeiro:', sitesData[0].id);
             }
           }
+        } else {
+          console.log('Usuário não definido ou sem papel, limpando sites');
+          setSites([]);
+          setCurrentSite(null);
+          setSelectedSiteId(null);
         }
       } catch (error) {
         console.error("Error loading sites:", error);
@@ -81,6 +89,11 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     if (user) {
       loadSites();
+    } else {
+      console.log('SiteContext - Nenhum usuário autenticado');
+      setSites([]);
+      setCurrentSite(null);
+      setSelectedSiteId(null);
     }
   }, [user]);
 
