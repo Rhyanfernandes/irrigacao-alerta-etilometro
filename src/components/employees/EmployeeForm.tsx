@@ -33,7 +33,7 @@ interface EmployeeFormProps {
 
 export function EmployeeForm({ open, setOpen, employee, onSave }: EmployeeFormProps) {
   const { user } = useAuth();
-  const { currentSite, selectedSiteId } = useSite();
+  const { currentSite, selectedSiteId, sites } = useSite();
   const [formData, setFormData] = useState<Partial<Employee>>(
     employee || {
       name: "",
@@ -43,33 +43,36 @@ export function EmployeeForm({ open, setOpen, employee, onSave }: EmployeeFormPr
     }
   );
 
-  // Atualiza os dados do formulário quando o currentSite muda
-  useEffect(() => {
-    if (!employee && currentSite) {
-      setFormData(prev => ({
-        ...prev,
-        siteId: currentSite.id,
-        siteName: currentSite.name
-      }));
-    }
-  }, [currentSite, employee]);
-
   // Inicializa o formulário com os dados corretos do funcionário ou da obra selecionada
   useEffect(() => {
     if (employee) {
       setFormData(employee);
     } else {
-      setFormData(prev => ({
-        ...prev,
+      let siteId = currentSite?.id;
+      let siteName = currentSite?.name;
+
+      // Se for usuário de obra, usar a obra do usuário
+      if (user?.role === 'site') {
+        siteId = user.siteId;
+        siteName = user.siteName;
+      } else if (user?.role === 'master' && selectedSiteId) {
+        // Se for master e tiver obra selecionada, usar a obra selecionada
+        const selectedSite = sites.find(s => s.id === selectedSiteId);
+        if (selectedSite) {
+          siteName = selectedSite.name;
+        }
+      }
+
+      setFormData({
         name: "",
         department: "",
         position: "",
         status: "active",
-        siteId: currentSite?.id || selectedSiteId || user?.siteId,
-        siteName: currentSite?.name || user?.siteName,
-      }));
+        siteId: siteId,
+        siteName: siteName,
+      });
     }
-  }, [employee, currentSite, selectedSiteId, user]);
+  }, [employee, currentSite, selectedSiteId, sites, user]);
 
   const handleChange = (field: string, value: string | boolean) => {
     // Ensure department and position are never empty strings
@@ -96,8 +99,21 @@ export function EmployeeForm({ open, setOpen, employee, onSave }: EmployeeFormPr
     const position = formData.position || "Colaborador";
 
     // Garantir que o siteId está definido
-    const siteId = formData.siteId || currentSite?.id || selectedSiteId || user?.siteId;
-    const siteName = formData.siteName || currentSite?.name || user?.siteName;
+    let siteId = formData.siteId;
+    let siteName = formData.siteName;
+    
+    // Se for usuário de obra, forçar a obra do usuário
+    if (user?.role === 'site') {
+      siteId = user.siteId;
+      siteName = user.siteName;
+    } else if (!siteId && user?.role === 'master' && selectedSiteId) {
+      // Se for master sem siteId definido mas com obra selecionada
+      siteId = selectedSiteId;
+      const selectedSite = sites.find(s => s.id === selectedSiteId);
+      if (selectedSite) {
+        siteName = selectedSite.name;
+      }
+    }
 
     if (!siteId) {
       toast.error("Nenhuma obra selecionada. Selecione uma obra primeiro.");
@@ -113,7 +129,7 @@ export function EmployeeForm({ open, setOpen, employee, onSave }: EmployeeFormPr
       status: formData.status || "active",
       active: formData.status === "active",
       siteId: siteId,
-      siteName: siteName,
+      siteName: siteName || "",
       createdAt: employee?.createdAt || new Date(),
     };
 
@@ -134,7 +150,11 @@ export function EmployeeForm({ open, setOpen, employee, onSave }: EmployeeFormPr
           </DialogTitle>
           <DialogDescription>
             Preencha as informações do colaborador abaixo.
-            {currentSite && (
+            {user?.role === 'site' ? (
+              <p className="mt-1 text-sm font-medium text-blue-600">
+                Obra: {user.siteName}
+              </p>
+            ) : currentSite && (
               <p className="mt-1 text-sm font-medium text-blue-600">
                 Obra: {currentSite.name}
               </p>

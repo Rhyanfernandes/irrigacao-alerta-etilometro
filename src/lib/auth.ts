@@ -16,13 +16,21 @@ export const getCurrentUser = async (): Promise<User | null> => {
     return null;
   }
   
+  // Retrieve user's site information from metadata
+  const siteId = user.user_metadata?.siteId;
+  const siteName = user.user_metadata?.siteName;
+  
+  if (!siteId && user.user_metadata?.role === 'site') {
+    console.error("Usuário de obra sem obra associada:", user.email);
+  }
+  
   return {
     id: user.id,
     email: user.email || '',
     name: user.user_metadata?.name || '',
     role: user.user_metadata?.role || 'site',
-    siteId: user.user_metadata?.siteId,
-    siteName: user.user_metadata?.siteName,
+    siteId: siteId,
+    siteName: siteName,
     createdAt: new Date(user.created_at || new Date()),
   };
 };
@@ -38,13 +46,17 @@ export const login = async (email: string, password: string): Promise<User | nul
     return null;
   }
   
+  // Get user-specific site information from metadata
+  const siteId = data.user.user_metadata?.siteId;
+  const siteName = data.user.user_metadata?.siteName;
+  
   return {
     id: data.user.id,
     email: data.user.email || '',
     name: data.user.user_metadata?.name || '',
     role: data.user.user_metadata?.role || 'site',
-    siteId: data.user.user_metadata?.siteId,
-    siteName: data.user.user_metadata?.siteName,
+    siteId: siteId,
+    siteName: siteName,
     createdAt: new Date(data.user.created_at || new Date()),
   };
 };

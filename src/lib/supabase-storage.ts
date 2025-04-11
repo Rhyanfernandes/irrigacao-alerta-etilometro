@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Employee, TestResult, DrawResult, Site } from '@/types';
 import { getCurrentUser } from './auth';
@@ -15,18 +14,10 @@ export const getEmployeesFromSupabase = async (): Promise<Employee[]> => {
     
     // Se for usuário de obra, filtra apenas os funcionários da obra
     if (user.role === 'site' && user.siteId) {
-      console.log('Filtrando funcionários da obra:', user.siteId);
+      console.log('Filtrando funcionários da obra do usuário:', user.siteId);
       query = query.eq('site_id', user.siteId);
-    } else if (user.role === 'master') {
-      // Para usuário master, não filtrar por obra por padrão para ver todos
-      const viewAllSites = localStorage.getItem('irricom_view_all_sites') === 'true';
-      const selectedSiteId = localStorage.getItem('irricom_selected_site');
-      
-      if (selectedSiteId && !viewAllSites) {
-        console.log('Master filtrando funcionários da obra selecionada:', selectedSiteId);
-        query = query.eq('site_id', selectedSiteId);
-      }
     }
+    // Para usuário master, retornamos todos, o filtro será feito no frontend
     
     const { data, error } = await query;
     
@@ -81,7 +72,14 @@ export const saveEmployeeToSupabase = async (employee: Employee): Promise<Employ
   
   console.log('Salvando funcionário no Supabase:', employee);
   
-  // Se o funcionário não tem uma obra, verificar se há uma selecionada
+  // Verificar permissão - usuários de obra só podem salvar funcionários da sua obra
+  if (user.role === 'site' && user.siteId) {
+    // Forçar o siteId do usuário para evitar mudanças não autorizadas
+    employee.siteId = user.siteId;
+    employee.siteName = user.siteName || '';
+  }
+  
+  // Se ainda não há um siteId definido (caso raro), tentar usar o do usuário 
   if (!employee.siteId) {
     // Verificar se o usuário master tem uma obra selecionada
     if (user.role === 'master') {
@@ -165,17 +163,41 @@ export const saveEmployeeToSupabase = async (employee: Employee): Promise<Employ
 };
 
 export const deleteEmployeeFromSupabase = async (id: string): Promise<boolean> => {
-  const { error } = await supabase
-    .from('employees')
-    .delete()
-    .eq('id', id);
+  const user = await getCurrentUser();
   
-  if (error) {
-    console.error('Erro ao excluir funcionário:', error);
+  if (!user) return false;
+  
+  try {
+    // Verificar se o usuário tem permissão para excluir este funcionário
+    if (user.role === 'site' && user.siteId) {
+      // Verificar se o funcionário pertence à mesma obra do usuário
+      const { data: employee } = await supabase
+        .from('employees')
+        .select('site_id')
+        .eq('id', id)
+        .single();
+      
+      if (!employee || employee.site_id !== user.siteId) {
+        console.error('Usuário não tem permissão para excluir este funcionário');
+        return false;
+      }
+    }
+    
+    const { error } = await supabase
+      .from('employees')
+      .delete()
+      .eq('id', id);
+    
+    if (error) {
+      console.error('Erro ao excluir funcionário:', error);
+      return false;
+    }
+    
+    return true;
+  } catch (e) {
+    console.error('Exceção ao excluir funcionário:', e);
     return false;
   }
-  
-  return true;
 };
 
 // Funções para testes

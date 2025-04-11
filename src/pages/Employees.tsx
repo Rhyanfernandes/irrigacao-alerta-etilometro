@@ -22,6 +22,8 @@ export default function Employees() {
     console.log("Employees page - site selecionado:", selectedSiteId);
     console.log("Employees page - site atual:", currentSite);
     console.log("Employees page - visualizando todas as obras:", isViewingAllSites);
+    console.log("Employees page - usuário:", user?.role, user?.siteId);
+    
     loadEmployees();
 
     // Add event listener for storage changes
@@ -30,7 +32,7 @@ export default function Employees() {
     return () => {
       window.removeEventListener("storage", loadEmployees);
     };
-  }, [selectedSiteId, isViewingAllSites]); // Recarregar quando a obra selecionada ou visualização mudar
+  }, [selectedSiteId, isViewingAllSites, user]); // Recarregar quando a obra selecionada, usuário ou visualização mudar
 
   const loadEmployees = async () => {
     setLoading(true);
@@ -40,6 +42,7 @@ export default function Employees() {
       
       // Se for usuário de obra, filtra apenas os funcionários da obra
       if (user?.role === 'site' && user.siteId) {
+        console.log('Filtrando colaboradores da obra do usuário:', user.siteId);
         const filteredEmployees = data.filter(emp => emp.siteId === user.siteId);
         setEmployees(filteredEmployees);
       } 
@@ -49,9 +52,12 @@ export default function Employees() {
         const filteredEmployees = data.filter(emp => emp.siteId === selectedSiteId);
         setEmployees(filteredEmployees);
       }
-      // Caso contrário, mostra todos
-      else {
+      // Caso contrário, mostra todos (apenas para usuários master)
+      else if (user?.role === 'master') {
         setEmployees(data);
+      } else {
+        // Caso padrão (não deveria acontecer)
+        setEmployees([]);
       }
     } catch (error) {
       console.error("Error loading employees:", error);
@@ -67,12 +73,24 @@ export default function Employees() {
   };
 
   const handleEdit = (employee: Employee) => {
+    // Usuários de obra só podem editar funcionários da sua obra
+    if (user?.role === 'site' && user.siteId !== employee.siteId) {
+      toast.error("Você não tem permissão para editar este colaborador");
+      return;
+    }
+    
     setEditingEmployee(employee);
     setFormOpen(true);
   };
 
   const handleSave = async (employee: Employee) => {
     try {
+      // Ensure the employee is associated with the correct site for site users
+      if (user?.role === 'site' && user.siteId) {
+        employee.siteId = user.siteId;
+        employee.siteName = user.siteName || '';
+      }
+      
       console.log('Salvando colaborador:', employee);
       await saveEmployee(employee);
       await loadEmployees();
@@ -84,6 +102,14 @@ export default function Employees() {
   };
 
   const handleDelete = async (id: string) => {
+    // Check if user has permission to delete this employee
+    const employeeToDelete = employees.find(emp => emp.id === id);
+    
+    if (user?.role === 'site' && employeeToDelete && user.siteId !== employeeToDelete.siteId) {
+      toast.error("Você não tem permissão para excluir este colaborador");
+      return;
+    }
+    
     try {
       await deleteEmployee(id);
       await loadEmployees();
@@ -95,11 +121,17 @@ export default function Employees() {
   };
 
   // Determinar o título da página
-  const pageTitle = isViewingAllSites
-    ? "Colaboradores - Todas as Obras"
-    : currentSite
-    ? `Colaboradores - ${currentSite.name}`
-    : "Colaboradores";
+  let pageTitle = "Colaboradores";
+  
+  if (user?.role === 'site') {
+    pageTitle = `Colaboradores - ${user.siteName || 'Sua Obra'}`;
+  } else if (user?.role === 'master') {
+    pageTitle = isViewingAllSites
+      ? "Colaboradores - Todas as Obras"
+      : currentSite
+      ? `Colaboradores - ${currentSite.name}`
+      : "Colaboradores";
+  }
 
   return (
     <>

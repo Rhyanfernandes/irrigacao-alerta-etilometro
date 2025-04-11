@@ -21,7 +21,8 @@ export const SiteSwitcher = () => {
     console.log('SiteSwitcher - site selecionado:', selectedSiteId);
     console.log('SiteSwitcher - site atual:', currentSite);
     console.log('SiteSwitcher - visualizando todas as obras:', isViewingAllSites);
-  }, [sites, selectedSiteId, currentSite, isViewingAllSites]);
+    console.log('SiteSwitcher - usuário:', user?.role, user?.siteId);
+  }, [sites, selectedSiteId, currentSite, isViewingAllSites, user]);
 
   // Only render for master users
   if (!user || user.role !== "master") {

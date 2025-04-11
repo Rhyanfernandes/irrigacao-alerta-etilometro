@@ -30,15 +30,21 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         const sitesData = await getSites();
         console.log('Sites carregados:', sitesData);
-        setSites(sitesData);
         
-        // Find the current site if user is a site user
+        // For site users, filter to only show their assigned site
         if (user?.role === 'site' && user.siteId) {
+          const filteredSites = sitesData.filter(s => s.id === user.siteId);
+          setSites(filteredSites);
+          
           console.log('Usuário de obra, definindo site atual:', user.siteId);
-          const site = sitesData.find(s => s.id === user.siteId) || null;
+          const site = filteredSites.length > 0 ? filteredSites[0] : null;
           setCurrentSite(site);
           setSelectedSiteId(user.siteId);
+          setIsViewingAllSites(false);
         } else if (user?.role === 'master') {
+          // Master user can see all sites
+          setSites(sitesData);
+          
           // Verificar se o usuário quer ver todas as obras
           const viewAllSitesStored = localStorage.getItem('irricom_view_all_sites') === 'true';
           setIsViewingAllSites(viewAllSitesStored);
@@ -106,10 +112,14 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setIsViewingAllSites(true);
         localStorage.setItem('irricom_view_all_sites', 'true');
       }
+    } else if (user?.role === 'site' && user?.siteId !== siteId) {
+      // Site users can't change to other sites
+      toast.error("Você só pode visualizar sua obra designada");
     }
   };
 
   const setViewAllSites = (viewAll: boolean) => {
+    // Only master users can view all sites
     if (user?.role === 'master') {
       setIsViewingAllSites(viewAll);
       localStorage.setItem('irricom_view_all_sites', viewAll.toString());
@@ -124,6 +134,8 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setCurrentSite(sites[0]);
         setSelectedSite(sites[0].id);
       }
+    } else {
+      toast.error("Apenas usuários administradores podem visualizar todas as obras");
     }
   };
 
